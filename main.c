@@ -50,6 +50,12 @@ void ler_ficheiro(t_principal * s_principal);
 void gravar_no_ficheiro(t_principal* s_principal);
 void limpa_array(t_principal* s_principal);
 void limpa_elemento(t_principal* s_principal, int index, int baseDados);
+void registar_informacao(t_principal* s_principal, int index, int baseDados);
+void registar_escola(t_principal* s_principal, int index);
+void registar_utilizador(t_principal* s_principal, int index);
+void registar_transacao(t_principal* s_principal, int index);
+int procurar_elemento_vazio(t_principal* s_principal, int baseDados);
+int selecinar_base_dados();
 void menu_principal(t_principal* s_principal);
 void menu_registar(t_principal* s_principal);
 void menu_consultar(t_principal* s_principal);
@@ -57,6 +63,7 @@ void menu_alterar(t_principal* s_principal);
 void menu_apagar(t_principal* s_principal);
 void menu_estatisticas(t_principal* s_principal);
 void menu_sair(t_principal* s_principal);
+
 void main() {
     t_principal s_principal;
     system("cls");
@@ -72,6 +79,13 @@ void ler_ficheiro(t_principal * s_principal) {
     else {
         fread(s_principal, sizeof(t_principal), 1, ficheiro);
     }
+    fflush(ficheiro);
+    fclose(ficheiro);
+}
+void gravar_no_ficheiro(t_principal* s_principal) {
+    FILE* ficheiro;
+    ficheiro = fopen("BaseDados.bin", "wb");
+    fwrite(s_principal, sizeof(t_principal), 1, ficheiro);
     fflush(ficheiro);
     fclose(ficheiro);
 }
@@ -115,12 +129,202 @@ void limpa_elemento(t_principal* s_principal, int index, int baseDados) {
             s_principal->v_transacao[index].hora = (t_hora){ 0, 0, 0 };
     }
 }
-void gravar_no_ficheiro(t_principal* s_principal) {
-    FILE* ficheiro;
-    ficheiro = fopen("BaseDados.bin", "wb");
-    fwrite(s_principal, sizeof(t_principal), 1, ficheiro);
-    fflush(ficheiro);
-    fclose(ficheiro);
+
+int selecinar_base_dados() {
+    int opcao;
+    do {
+        system("cls");
+        printf("Selecione a base de dados que deseja manipular:\n\n");
+        printf("1 - Escolas\n");
+        printf("2 - Utilizadores\n");
+        printf("3 - Transacoes\n");
+        printf("0 - Voltar atras\n\n> ");
+        scanf("%d", &opcao);
+    } while (opcao < 0 && opcao > 3);
+    return opcao;
+}
+int procurar_elemento_vazio(t_principal* s_principal, int baseDados) {
+    switch (baseDados) {
+        case ESCOLA:
+            for (int i = 0; i < MAX_ESCOLA; i++) {
+                if (s_principal->v_escola[i].id_escola == 0) {
+                    return i;
+                }
+            }
+            break;
+        case UTILIZADOR:
+            for (int i = 0; i < MAX_UTILIZADOR; i++) {
+                if (s_principal->v_utilizador[i].id_utilizador == 0) {
+                    return i;
+                }
+            }
+            break;
+        case TRANSACAO:
+            for (int i = 0; i < MAX_UTILIZADOR; i++) {
+                if (s_principal->v_transacao[i].id_transacao == 0) {
+                    return i;
+                }
+            }
+            break;
+    }
+}
+
+void registar_informacao(t_principal* s_principal, int index, int baseDados) {
+    switch (baseDados) {
+        case ESCOLA:
+            printf("Registo de Escolas: \n\n");
+            registar_escola(s_principal, index);
+            break;
+        case UTILIZADOR:
+            printf("Registo de Utilizadores: \n\n");
+            registar_utilizador(s_principal, index);
+            break;
+        case TRANSACAO:
+            printf("Registo de Transacoes: \n\n");
+            registar_transacao(s_principal, index);
+            break;
+    }
+    gravar_no_ficheiro(s_principal);
+}
+void registar_escola(t_principal* s_principal, int index) {
+    int validacao_escolas[5];
+    t_escola v_aux_escola[MAX_ESCOLA];
+    fflush(stdin);
+    do {
+        printf("Identificador Escola: ");
+        scanf("%d", &v_aux_escola[index].id_escola);
+        validacao_escolas[0] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_escolas[0] == 0);
+    do {
+        printf("Nome Escola: ");
+        scanf("%s", v_aux_escola[index].nome_escola);
+        validacao_escolas[1] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_escolas[1] == 0);
+    do {
+        printf("Abreviatura: ");
+        scanf("%s", v_aux_escola[index].abreviatura);
+        validacao_escolas[2] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_escolas[2] == 0);
+    do {
+        printf("Campus: ");
+        scanf("%s", v_aux_escola[index].campus);
+        validacao_escolas[3] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_escolas[3] == 0);
+    do {
+        printf("Localizacao: ");
+        scanf("%s", v_aux_escola[index].localizacao);
+        validacao_escolas[4] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_escolas[4] == 0);
+    if (validacao_escolas[0] == 1 && validacao_escolas[1] == 1 && validacao_escolas[2] == 1 && validacao_escolas[3] == 1 && validacao_escolas[4] == 1)
+    {
+        s_principal->v_escola[index].id_escola = v_aux_escola[index].id_escola;
+        strcpy(s_principal->v_escola[index].nome_escola, v_aux_escola[index].nome_escola);
+        strcpy(s_principal->v_escola[index].abreviatura, v_aux_escola[index].abreviatura);
+        strcpy(s_principal->v_escola[index].campus, v_aux_escola[index].campus);
+        strcpy(s_principal->v_escola[index].localizacao, v_aux_escola[index].localizacao);   
+    }
+}
+void registar_utilizador(t_principal* s_principal, int index) {
+    int validacao_utilizadores[7];
+    t_utilizador v_aux_utilizador[MAX_UTILIZADOR];
+    fflush(stdin);
+    do {
+        printf("Identificador Utilizador: ");
+        scanf("%d", &v_aux_utilizador[index].id_utilizador);
+        validacao_utilizadores[0] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_utilizadores[0] == 0);
+    do {
+        printf("Identificador Escola: ");
+        scanf("%d", &v_aux_utilizador[index].id_escola);
+        validacao_utilizadores[1] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_utilizadores[1] == 0);
+    do {
+        printf("Nome Utilizador: ");
+        scanf("%s", v_aux_utilizador[index].nome_utilizador);
+        validacao_utilizadores[2] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_utilizadores[2] == 0);
+    do {
+        printf("NIF: ");
+        scanf("%d", &v_aux_utilizador[index].NIF);
+        validacao_utilizadores[3] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_utilizadores[3] == 0);
+    do {
+        printf("Tipo Utilizador: ");
+        scanf("%s", v_aux_utilizador[index].tipo_utilizador);
+        validacao_utilizadores[4] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_utilizadores[4] == 0);
+    do {
+        printf("Email: ");
+        scanf("%s", v_aux_utilizador[index].email);
+        validacao_utilizadores[5] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_utilizadores[5] == 0);
+    do {
+        printf("Saldo: ");
+        scanf("%f", &v_aux_utilizador[index].saldo);
+        validacao_utilizadores[6] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_utilizadores[6] == 0);
+    if (validacao_utilizadores[0] == 1 && validacao_utilizadores[1] == 1 && validacao_utilizadores[2] == 1 && validacao_utilizadores[3] == 1 && validacao_utilizadores[4] == 1 && validacao_utilizadores[5] == 1 && validacao_utilizadores[6] == 1)
+    {
+        s_principal->v_utilizador[index].id_utilizador = v_aux_utilizador[index].id_utilizador;
+        s_principal->v_utilizador[index].id_escola = v_aux_utilizador[index].id_escola;
+        strcpy(s_principal->v_utilizador[index].nome_utilizador, v_aux_utilizador[index].nome_utilizador);
+        s_principal->v_utilizador[index].NIF = v_aux_utilizador[index].NIF;
+        strcpy(s_principal->v_utilizador[index].tipo_utilizador, v_aux_utilizador[index].tipo_utilizador);
+        strcpy(s_principal->v_utilizador[index].email, v_aux_utilizador[index].email);
+        s_principal->v_utilizador[index].saldo = v_aux_utilizador[index].saldo;
+    }
+}
+void registar_transacao(t_principal* s_principal, int index) {
+    int validacao_transacoes[6];
+    t_transacao v_aux_transacao[MAX_TRANSACAO];
+    fflush(stdin);
+    do {
+        printf("Identificador Transacao: ");
+        scanf("%d", &v_aux_transacao[index].id_transacao);
+        validacao_transacoes[0] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_transacoes[0] == 0);
+    do {
+        printf("Identificador Utilizador: ");
+        scanf("%d", &v_aux_transacao[index].id_utilizador);
+        validacao_transacoes[1] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_transacoes[1] == 0);
+    do {
+        printf("Tipo Transacao: ");
+        scanf("%s", v_aux_transacao[index].tipo_transacao);
+        validacao_transacoes[2] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_transacoes[2] == 0);
+    do {
+        printf("Valor Transacao: ");
+        scanf("%d", &v_aux_transacao[index].valor);
+        validacao_transacoes[3] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_transacoes[3] == 0);
+    do {
+        printf("Dia: ");
+        scanf("%d", &v_aux_transacao[index].data.dia);
+        printf("Mes: ");
+        scanf("%d", &v_aux_transacao[index].data.mes);
+        printf("Ano: ");
+        scanf("%d", &v_aux_transacao[index].data.ano);
+        validacao_transacoes[4] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_transacoes[4] == 0);
+    do {
+        printf("Hora: ");
+        scanf("%d", &v_aux_transacao[index].hora.hora);
+        printf("Minutos: ");
+        scanf("%d", &v_aux_transacao[index].hora.minuto);
+        printf("Segundos: ");
+        scanf("%d", &v_aux_transacao[index].hora.segundo);
+        validacao_transacoes[5] = 1; // mais tarde mudar para uma validacao correta
+    } while (validacao_transacoes[5] == 0);
+    if (validacao_transacoes[0] == 1 && validacao_transacoes[1] == 1 && validacao_transacoes[2] == 1 && validacao_transacoes[3] == 1 && validacao_transacoes[4] == 1 && validacao_transacoes[5] == 1)
+    {
+        s_principal->v_transacao[index].id_transacao = v_aux_transacao[index].id_transacao;
+        s_principal->v_transacao[index].id_utilizador = v_aux_transacao[index].id_utilizador;
+        strcpy(s_principal->v_transacao[index].tipo_transacao, v_aux_transacao[index].tipo_transacao);
+        s_principal->v_transacao[index].valor = v_aux_transacao[index].valor;
+        s_principal->v_transacao[index].data = (t_data){ v_aux_transacao[index].data.dia, v_aux_transacao[index].data.mes, v_aux_transacao[index].data.ano };
+        s_principal->v_transacao[index].hora = (t_hora){ v_aux_transacao[index].hora.hora, v_aux_transacao[index].hora.minuto, v_aux_transacao[index].hora.segundo };
+    }
 }
 
 void menu_principal(t_principal* s_principal) {
@@ -152,7 +356,16 @@ void menu_principal(t_principal* s_principal) {
     }
 }
 void menu_registar(t_principal* s_principal) {
-    int i;
+    int opcao = selecinar_base_dados();
+    if (opcao != 0) {
+        system("cls");
+        int index = procurar_elemento_vazio(s_principal, opcao);
+        registar_informacao(s_principal, index, opcao);
+        //consultar_informacao(s_principal, index);
+    }
+    else {
+        menu_principal(s_principal);
+    }
 }
 void menu_consultar(t_principal* s_principal) {
     int i;
