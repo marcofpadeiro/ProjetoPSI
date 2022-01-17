@@ -10,7 +10,7 @@
 #define UTILIZADOR 2
 #define TRANSACAO 3
 
-#define TAMANHO_NOME_ESCOLA 50
+#define TAMANHO_NOME_ESCOLA 60
 #define TAMANHO_TIPO_TRANSACAO 10
 #define TAMANHO_ABREVIATURA 5
 #define TAMANHO_CAMPUS 10
@@ -56,13 +56,16 @@ void registar_informacao(t_principal* s_principal, int index, int baseDados);
 void registar_escola(t_principal* s_principal, int index);
 void registar_utilizador(t_principal* s_principal, int index);
 void registar_transacao(t_principal* s_principal, int index);
+void consultar_informacao(t_principal* s_principal, int baseDados);
+void apresentar_dados(t_principal* s_principal, int index, int baseDados);
 int procurar_elemento_vazio(t_principal* s_principal, int baseDados);
 int selecinar_base_dados();
 void menu_principal(t_principal* s_principal);
 void menu_registar(t_principal* s_principal);
 void menu_consultar(t_principal* s_principal);
-void menu_alterar(t_principal* s_principal);
-void menu_apagar(t_principal* s_principal);
+void menu_alterar(t_principal* s_principal, int baseDados);
+void alterar_informacao(t_principal* s_principal, int index, int baseDados);
+void menu_apagar(t_principal* s_principal, int baseDados);
 void menu_estatisticas(t_principal* s_principal);
 void menu_sair(t_principal* s_principal);
 
@@ -161,7 +164,7 @@ int procurar_elemento_vazio(t_principal* s_principal, int baseDados) {
             }
             break;
         case TRANSACAO:
-            for (int i = 0; i < MAX_UTILIZADOR; i++) {
+            for (int i = 0; i < MAX_TRANSACAO; i++) {
                 if (s_principal->v_transacao[i].id_transacao == 0) {
                     return i;
                 }
@@ -169,6 +172,7 @@ int procurar_elemento_vazio(t_principal* s_principal, int baseDados) {
             break;
     }
 }
+
 
 void registar_informacao(t_principal* s_principal, int index, int baseDados) {
     switch (baseDados) {
@@ -188,9 +192,10 @@ void registar_informacao(t_principal* s_principal, int index, int baseDados) {
     gravar_no_ficheiro(s_principal);
 }
 void registar_escola(t_principal* s_principal, int index) {
-    int validacao_escolas[5];                // 0 == false || 1 == true
-    t_escola v_aux_escola[MAX_ESCOLA];
-    fflush(stdin);
+    int validacao_escolas[5];                
+    t_escola v_aux_escola[MAX_ESCOLA]; 
+
+    /* VERRY BIG PROBLEM INSERTING DATA MAN */
     do {
         printf("Identificador Escola: ");   
         scanf("%d", &v_aux_escola[index].id_escola);
@@ -198,27 +203,30 @@ void registar_escola(t_principal* s_principal, int index) {
         if(validacao_escolas[0] == 0) { printf("\nEste numero precisa de ser de 1 a 5!\n\n");}
     } while (validacao_escolas[0] == 0);
     do {
+        fflush(stdin);
         printf("Nome Escola: ");
-        scanf("%s", v_aux_escola[index].nome_escola);
+        scanf("%[^\n]s", v_aux_escola[index].nome_escola);
         validacao_escolas[1] = 1; // mais tarde mudar para uma validacao correta
         if(validacao_escolas[1] == 0) { printf("\nO nome da escola tem que!\n\n");}
     } while (validacao_escolas[1] == 0);
     do {
+        fflush(stdin);
         printf("Abreviatura: ");
-        scanf("%s", v_aux_escola[index].abreviatura);
+        scanf("%[^\n]s", v_aux_escola[index].abreviatura);
         validacao_escolas[2] = 1; // mais tarde mudar para uma validacao correta
         if(validacao_escolas[2] == 0) { printf("\nA abreviatura pode ter no maximo 5 digitos!!\n\n");}
     } while (validacao_escolas[2] == 0);
     do {
+        fflush(stdin);
         printf("Campus: ");
-        scanf("%s", v_aux_escola[index].campus);
+        scanf("%[^\n]s", v_aux_escola[index].campus);
         validacao_escolas[3] = 1; // mais tarde mudar para uma validacao correta
         if(validacao_escolas[3] == 0) { printf("\nEste campo precisa de ser no formato 'Campus *numero*'!!\n\n");}
     } while (validacao_escolas[3] == 0);
-
     do {
+        fflush(stdin);
         printf("Localizacao: ");
-        scanf("%s", v_aux_escola[index].localizacao);
+        scanf("%[^\n]s", v_aux_escola[index].localizacao);
         validacao_escolas[4] = 1; // mais tarde mudar para uma validacao correta
         if(validacao_escolas[4] == 0) { printf("\nA localizacao tem que !!!\n\n");}
     } while (validacao_escolas[4] == 0);
@@ -347,6 +355,58 @@ void registar_transacao(t_principal* s_principal, int index) {
     }
 }
 
+void consultar_informacao(t_principal* s_principal, int baseDados) {
+    int index = 0;
+    switch (baseDados) {
+        case ESCOLA:
+            printf("Consulta de Escolas: \n\n");
+            printf("# | Identificador Escola | Nome Escola | Abreviatura | Campus | Localizacao\n");
+            for(index = 0; index < MAX_ESCOLA; index++){
+                if(s_principal->v_escola[index].id_escola != 0){
+                    apresentar_dados(s_principal, index, ESCOLA);
+                }
+            }
+            break;
+        case UTILIZADOR:
+            printf("Consulta de Utilizadores: \n\n");
+            printf("# | Identificador Utilizador | Identificador Escola | Nome Utilizador | NIF | Tipo Utilizador | E-Mail | Saldo\n");
+            for(index = 0; index < MAX_UTILIZADOR; index++){
+                if(s_principal->v_utilizador[index].id_utilizador != 0){
+                    apresentar_dados(s_principal, index, UTILIZADOR);
+                }
+            }
+            break;
+        case TRANSACAO:
+            printf("Consulta de Transacao: \n\n");
+            printf("# | Identificador Transacao | Identificador Utilizador | Tipo Transacao | Valor Transacao | Data | Hora\n");
+            for(index = 0; index < MAX_TRANSACAO; index++){
+                if(s_principal->v_transacao[index].id_transacao != 0){
+                    apresentar_dados(s_principal, index, TRANSACAO);
+                }
+            }
+            break;
+    }
+    gravar_no_ficheiro(s_principal);
+}
+void apresentar_dados(t_principal* s_principal, int index, int baseDados){
+    t_escola v_aux_escola = s_principal->v_escola[index];
+    t_utilizador v_aux_utilizador = s_principal->v_utilizador[index];
+    t_transacao v_aux_transacao = s_principal->v_transacao[index];
+    switch(baseDados){
+        case ESCOLA:
+            printf("%d ; %d ; %s ; %s ; %s ; %s\n", index, v_aux_escola.id_escola, v_aux_escola.nome_escola, v_aux_escola.abreviatura, v_aux_escola.campus, v_aux_escola.localizacao);
+            break;
+        case UTILIZADOR:
+            printf("%d ; %d ; %d ; %s ; %d ; %s ; %s ; %.2f\n", index, v_aux_utilizador.id_utilizador, v_aux_utilizador.id_escola, v_aux_utilizador.nome_utilizador, v_aux_utilizador.NIF, v_aux_utilizador.tipo_utilizador, v_aux_utilizador.email, v_aux_utilizador.saldo);
+            break;
+        case TRANSACAO:
+            printf("%d ; %d ; %d ; %s ; %.2f ; %d/%d/%d ; %d:%d:%d\n", index, v_aux_transacao.id_transacao, v_aux_transacao.id_utilizador, v_aux_transacao.tipo_transacao, v_aux_transacao.valor, v_aux_transacao.data.dia, v_aux_transacao.data.mes, v_aux_transacao.data.ano, v_aux_transacao.hora.hora, v_aux_transacao.hora.minuto, v_aux_transacao.hora.segundo);
+            break;
+    }
+        
+
+}
+
 void menu_principal(t_principal* s_principal) {
     int opcao = 6;
     do {
@@ -354,9 +414,7 @@ void menu_principal(t_principal* s_principal) {
         printf("Menu Principal\n\n");
         printf("1 - Registar informacao\n");
         printf("2 - Consultar informacao\n");
-        printf("3 - Alterar informacao\n");
-        printf("4 - Apagar informacao\n");
-        printf("5 - Estatisticas\n");
+        printf("3 - Estatisticas\n");
         printf("0 - Sair da aplicacao\n\n> ");
         scanf("%d", &opcao);
     } while(opcao < 0 || opcao > 5);
@@ -366,10 +424,6 @@ void menu_principal(t_principal* s_principal) {
         case 2: 
             menu_consultar(s_principal); break;
         case 3: 
-            menu_alterar(s_principal); break;
-        case 4: 
-            menu_apagar(s_principal); break;
-        case 5: 
             menu_estatisticas(s_principal); break;
         case 0: 
             menu_sair(s_principal); break;
@@ -381,19 +435,55 @@ void menu_registar(t_principal* s_principal) {
         system("cls");
         int index = procurar_elemento_vazio(s_principal, opcao);
         registar_informacao(s_principal, index, opcao);
-        //consultar_informacao(s_principal, index);
+        printf("\n\n");
+        apresentar_dados(s_principal, index, opcao);
     }
     else {
         menu_principal(s_principal);
     }
 }
 void menu_consultar(t_principal* s_principal) {
+    int opcao = selecinar_base_dados();
+    int opcao1 = 0;
+    if (opcao != 0) {
+        system("cls");
+        consultar_informacao(s_principal, opcao);
+        do {
+            printf("\n\n1 - Alterar Informacao\n");
+            printf("2 - Apagar Informacao\n");
+            printf("3 - Procurar\n");
+            printf("4 - Mudar base de dados\n");
+            printf("0 - Voltar atras\n\n>");
+            scanf("%d", &opcao1);
+        } while (opcao1 < 0 || opcao1 > 3);
+        switch (opcao1){
+        case 1:
+            menu_alterar(s_principal, opcao1);
+            break;
+        case 2:
+            menu_apagar(s_principal, opcao1);
+            break;
+        case 3:
+            // Procurar
+            break;
+        case 4:
+            menu_consultar(s_principal);
+            break;
+        case 0:
+            menu_principal(s_principal);
+        }
+    }
+    else {
+        menu_principal(s_principal);
+    }
+}
+void menu_alterar(t_principal* s_principal, int baseDados){
+
+}
+void alterar_informacao(t_principal* s_principal, int index, int baseDados) {
     int i;
 }
-void menu_alterar(t_principal* s_principal) {
-    int i;
-}
-void menu_apagar(t_principal* s_principal) {
+void menu_apagar(t_principal* s_principal, int baseDados) {
     int i;
 }
 void menu_estatisticas(t_principal* s_principal) {
