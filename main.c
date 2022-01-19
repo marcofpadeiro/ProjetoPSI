@@ -63,6 +63,8 @@ void cabecalho_apresentar_dados(int index);
 int procurar_elemento_vazio(t_principal* s_principal, int baseDados);
 int pesquisa_elemento(t_principal* s_principal, int identificador, int baseDados);
 int selecinar_base_dados();
+int conta_caracteres_string(char string[], int tamanho);
+int conta_caracteres_numero(int numero);
 int verificar_se_existe(t_principal * s_principal, int index, int baseDados);
 void limite_base_dados(t_principal* s_principal, int baseDados);
 void menu_principal(t_principal* s_principal);
@@ -381,8 +383,6 @@ void consultar_informacao(t_principal* s_principal, int baseDados) {
     int index = 0;
     switch (baseDados) {
         case ESCOLA:
-            printf("Consulta de Escolas: \n\n");
-            cabecalho_apresentar_dados(baseDados);
             for(index = 0; index < MAX_ESCOLA; index++){
                 if(s_principal->v_escola[index].id_escola != 0){
                     apresentar_dados(s_principal, index, ESCOLA);
@@ -390,8 +390,6 @@ void consultar_informacao(t_principal* s_principal, int baseDados) {
             }
             break;
         case UTILIZADOR:
-            printf("Consulta de Utilizadores: \n\n");
-            cabecalho_apresentar_dados(baseDados);
             for(index = 0; index < MAX_UTILIZADOR; index++){
                 if(s_principal->v_utilizador[index].id_utilizador != 0){
                     apresentar_dados(s_principal, index, UTILIZADOR);
@@ -399,8 +397,6 @@ void consultar_informacao(t_principal* s_principal, int baseDados) {
             }
             break;
         case TRANSACAO:
-            printf("Consulta de Transacao: \n\n");
-            cabecalho_apresentar_dados(baseDados);
             for(index = 0; index < MAX_TRANSACAO; index++){
                 if(s_principal->v_transacao[index].id_transacao != 0){
                     apresentar_dados(s_principal, index, TRANSACAO);
@@ -410,33 +406,65 @@ void consultar_informacao(t_principal* s_principal, int baseDados) {
     }
     
 }
+int conta_caracteres_string(char string[], int tamanho){
+    int count = 0, index = 0;
+    for(int index = 0; string[index] != '\0'; index++){
+        count++;
+    }
+    return count;
+}
+int conta_caracteres_numero(int numero){
+    int count = 1;
+    while (numero > 9) {
+        numero = numero / 10;
+        count++;
+    }
+    return count;
+}
+int calcula_numero_de_espacos(int tamanhoString, int espacosNormalmente){
+    return (espacosNormalmente - tamanhoString);
+}
 void cabecalho_apresentar_dados(int baseDados){
     switch(baseDados){
         case ESCOLA:
-            printf("# | Identificador Escola | Nome Escola | Abreviatura | Campus | Localizacao\n");
+            
+            printf(" #  | ID Escola | Nome Escola                                       | Abreviatura |  Campus   |  Localizacao    |\n");
+            printf("----------------------------------------------------------------------------------------------------------------------\n");
             break;
         case UTILIZADOR:
-            printf("# | Identificador Utilizador | Identificador Escola | Nome Utilizador | NIF | Tipo Utilizador | E-Mail | Saldo\n");
+            printf(" # | ID Utilizador | ID Escola | Nome Utilizador     | NIF       | Tipo Utilizador | E-Mail             | Saldo    |\n");
+            printf("----------------------------------------------------------------------------------------------------------------------\n");
             break;
         case TRANSACAO:
-            printf("# | Identificador Transacao | Identificador Utilizador | Tipo Transacao | Valor Transacao | Data | Hora\n");
-            break;
+            printf(" #  |  ID Transacao  |  ID Utilizador  |  Tipo Transacao  |  Valor Transacao  |   Data        |   Hora       |\n");
+            printf("----------------------------------------------------------------------------------------------------------------------\n");
+            break; 
     }
 }
 void apresentar_dados(t_principal* s_principal, int index, int baseDados){
     t_escola v_aux_escola = s_principal->v_escola[index];
     t_utilizador v_aux_utilizador = s_principal->v_utilizador[index];
     t_transacao v_aux_transacao = s_principal->v_transacao[index];
+    int i = 0, elementos_escolas[6];
+    elementos_escolas[0] = conta_caracteres_numero(index);
+    elementos_escolas[1] = conta_caracteres_numero(v_aux_escola.id_escola);
+    elementos_escolas[2] = conta_caracteres_string(v_aux_escola.nome_escola, TAMANHO_NOME_ESCOLA);
+    elementos_escolas[3] = conta_caracteres_string(v_aux_escola.abreviatura, TAMANHO_ABREVIATURA);
+    elementos_escolas[4] = conta_caracteres_string(v_aux_escola.campus, TAMANHO_CAMPUS);
+    elementos_escolas[5] = conta_caracteres_string(v_aux_escola.localizacao, TAMANHO_LOCALIZACAO);
+    char espacos[7][60];
     switch(baseDados){
-        case ESCOLA:
-            printf("%d ; %d ; %s ; %s ; %s ; %s\n", index, v_aux_escola.id_escola, v_aux_escola.nome_escola, v_aux_escola.abreviatura, v_aux_escola.campus, v_aux_escola.localizacao);
+        case ESCOLA:    
+            printf(" %d ; %d ; %s ; %s ; %s ; %s\n", index, v_aux_escola.id_escola, v_aux_escola.nome_escola, v_aux_escola.abreviatura, v_aux_escola.campus, v_aux_escola.localizacao);
             break;
         case UTILIZADOR:
             printf("%d ; %d ; %d ; %s ; %d ; %s ; %s ; %.2f\n", index, v_aux_utilizador.id_utilizador, v_aux_utilizador.id_escola, v_aux_utilizador.nome_utilizador, v_aux_utilizador.NIF, v_aux_utilizador.tipo_utilizador, v_aux_utilizador.email, v_aux_utilizador.saldo);
             break;
         case TRANSACAO:
-            printf("%d ; %d ; %d ; %s ; %.2f ; %d/%d/%d ; %d:%d:%d\n", index, v_aux_transacao.id_transacao, v_aux_transacao.id_utilizador, v_aux_transacao.tipo_transacao, v_aux_transacao.valor, v_aux_transacao.data.dia, v_aux_transacao.data.mes, v_aux_transacao.data.ano, v_aux_transacao.hora.hora, v_aux_transacao.hora.minuto, v_aux_transacao.hora.segundo);
+            printf("%d", index);
+            //printf("%d ; %d ; %d ; %s ; %.2f ; %d/%d/%d ; %d:%d:%d\n", index, v_aux_transacao.id_transacao, v_aux_transacao.id_utilizador, v_aux_transacao.tipo_transacao, v_aux_transacao.valor, s_principal->v_transacao[index].data.dia, s_principal->v_transacao[index].data.mes, s_principal->v_transacao[index].data.ano, s_principal->v_transacao[index].hora.hora, s_principal->v_transacao[index].hora.minuto, s_principal->v_transacao[index].hora.segundo);
             break;
+        default: 
     }
         
 
@@ -486,11 +514,11 @@ void menu_registar(t_principal* s_principal, int baseDados) {
         case TRANSACAO: strcpy(titulo, "Transacoes"); break;
     }
     system("cls");
-    printf("Menu registar - %s\n", titulo);
+    printf("Menu Registar - %s\n", titulo);
     printf("-----------------------------------------\n");
     if(baseDados == ESCOLA || baseDados == UTILIZADOR || baseDados == TRANSACAO){
         registar_informacao(s_principal, index, baseDados);
-        printf("-----------------------------------------\n");
+        printf("\n");
         cabecalho_apresentar_dados(baseDados);
         apresentar_dados(s_principal, index, baseDados);
         opcao = obter_input(1, 3, "\nDeseja introduzir mais elementos?", "\n1 - Sim", "\n2 - Nao", "\n3 - Mudar base de dados", "\0", "\0");
@@ -502,20 +530,19 @@ void menu_registar(t_principal* s_principal, int baseDados) {
     } else { menu_principal(s_principal); }
 }
 void menu_consultar(t_principal* s_principal, int baseDados) {
-    int opcao = 0, index = procurar_elemento_vazio(s_principal, baseDados);
+    int opcao = 0, max_elementos = 0, i = 0, index = procurar_elemento_vazio(s_principal, baseDados);
     char titulo[13];
     switch(baseDados){
-        case ESCOLA: strcpy(titulo, "Escolas"); break;
-        case UTILIZADOR: strcpy(titulo, "Utilizadores"); break;
-        case TRANSACAO: strcpy(titulo, "Transacoes"); break;
+        case ESCOLA: strcpy(titulo, "Escolas"); max_elementos = MAX_ESCOLA; break;
+        case UTILIZADOR: strcpy(titulo, "Utilizadores"); max_elementos = MAX_UTILIZADOR; break;
+        case TRANSACAO: strcpy(titulo, "Transacoes"); max_elementos = MAX_TRANSACAO; break;
     }
     system("cls");
-    printf("Menu registar - %s\n\n", titulo);
+    printf("Menu Consultar - %s\n\n", titulo);
     if(baseDados == ESCOLA || baseDados == UTILIZADOR || baseDados == TRANSACAO){
-        //registar_informacao(s_principal, index, baseDados);
-        //cabecalho_apresentar_dados(baseDados);
-        //apresentar_dados(s_principal, index, baseDados);
-        opcao = obter_input(0, 4, "\n\n1 - Procurar elemento", "\n2 - Apagar informacao", "\n3 - Alterar", "\n4 - Mudar base de dados", "\n0 - Voltar atras", "\0");
+        cabecalho_apresentar_dados(baseDados);
+        consultar_informacao(s_principal, baseDados);
+        opcao = obter_input(0, 4, "\n\n1 - Procurar elemento", "\n2 - Apagar elemento", "\n3 - Alterar elemento", "\n4 - Mudar base de dados", "\n0 - Voltar atras", "\0");
         switch (opcao){
             case 1: /*procurar_elemento(s_principal, baseDados);*/ break;
             case 2: apagar_elemento(s_principal, receber_index(), baseDados); break;
@@ -534,11 +561,10 @@ int receber_index(){
 void apagar_elemento(t_principal* s_principal, int index, int baseDados){
     system("cls");
     if(verificar_se_existe(s_principal, index, baseDados) == 1){
-        printf("\n\nTem a certeza que quer apagar este elemento?\n");
-        printf("-----------------------------------------\n");
-        // mostra o elemento
-        printf("\n-----------------------------------------\n");
-        int opcao = obter_input(0, 3, "\n1 - Sim", "\n2 - Nao", "\n3 - Escolher outro elemento", "\n0 - Voltar atras", "\0", "\0");
+        printf("Tem a certeza que quer apagar este elemento?\n\n\n");
+        cabecalho_apresentar_dados(baseDados);
+        apresentar_dados(s_principal, index, baseDados);
+        int opcao = obter_input(0, 3, "\n\n1 - Sim", "\n2 - Nao", "\n3 - Escolher outro elemento", "\n0 - Voltar atras", "\0", "\0");
         switch(opcao){
             case 1:  // Sim
                 limpa_elemento(s_principal, index, baseDados);
@@ -552,7 +578,7 @@ void apagar_elemento(t_principal* s_principal, int index, int baseDados){
         }
     } else{
         printf("\nO elemento com index %d nao existe na nossa base de dados!\n", index);
-        int opcao_1 = obter_input(0, 2, "1 - Registar elemento", "2 - Escolher outro elemento", "0 - Voltar atras", "\0", "\0", "\0");
+        int opcao_1 = obter_input(0, 2, "1 - Registar elemento\n", "2 - Escolher outro elemento\n", "0 - Voltar atras\n", "\0", "\0", "\0");
         switch(opcao_1){
             case 1: menu_registar(s_principal, baseDados); break;
             case 2: alterar_elemento(s_principal, receber_index(), baseDados);
@@ -563,11 +589,10 @@ void apagar_elemento(t_principal* s_principal, int index, int baseDados){
 void alterar_elemento(t_principal* s_principal, int index, int baseDados) {
     system("cls");
     if(verificar_se_existe(s_principal, index, baseDados) == 1){
-        printf("\n\nÉ este o elemento que deseja alterar?\n");
-        printf("-----------------------------------------\n");
-        // mostra o elemento
-        printf("\n-----------------------------------------\n");
-        int opcao = obter_input(0, 3, "\n1 - Sim", "\n2 - Nao", "\n3 - Escolher outro elemento", "\n0 - Voltar atras", "\0", "\0");
+        printf("\n\nPretende alterar este elemento?\n\n");
+        cabecalho_apresentar_dados(baseDados);
+        apresentar_dados(s_principal, index, baseDados);
+        int opcao = obter_input(0, 3, "\n\n1 - Sim", "\n2 - Nao", "\n3 - Escolher outro elemento", "\n0 - Voltar atras", "\0", "\0");
         switch(opcao){
             case 1:  // Sim
                 registar_informacao(s_principal, index, baseDados);
@@ -579,7 +604,7 @@ void alterar_elemento(t_principal* s_principal, int index, int baseDados) {
         }
     } else{
         printf("\nO elemento com index %d nao existe na nossa base de dados!\n", index);
-        int opcao_1 = obter_input(0, 2, "1 - Registar elemento", "2 - Escolher outro elemento", "0 - Voltar atras", "\0", "\0", "\0");
+        int opcao_1 = obter_input(0, 2, "1 - Registar elemento\n", "2 - Escolher outro elemento\n", "0 - Voltar atras", "\0", "\0", "\0");
         switch(opcao_1){
             case 1: menu_registar(s_principal, baseDados); break;
             case 2: alterar_elemento(s_principal, receber_index(), baseDados);
