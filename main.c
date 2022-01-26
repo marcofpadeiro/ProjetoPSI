@@ -76,6 +76,9 @@ void alterar_elemento(t_principal* s_principal, int index, int baseDados);
 void apagar_elemento(t_principal* s_principal, int index, int baseDados);
 void menu_estatisticas(t_principal* s_principal);
 void menu_sair(t_principal* s_principal);
+float calcula_total_faturado(t_principal * s_principal, int index);
+int calcula_percentagem_faturado_por_escola(t_principal * s_principal, int id_escola, int objetivo);
+int verifica_se_utilizador_pertence_escola(t_principal * s_principal, int id_utilizador, int id_escola);
 int receber_index();
 void total_faturado_por_escola(t_principal* s_principal);
 void percentagem_transacaoes_por_escola(t_principal* s_principal);
@@ -521,7 +524,7 @@ void menu_principal(t_principal* s_principal) {
     }
 }
 int obter_input(int minimo, int maximo, char texto1[], char texto2[], char texto3[], char texto4[], char texto5[], char texto6[]){
-    char textos[6][50];          // criação de array para facilitar o uso de ciclos
+    char textos[6][100];          // criação de array para facilitar o uso de ciclos
     int escrever = 0, opcao = 0, index = 0;                
     strcpy(textos[0], texto1);   // atribuição do valor dos parametros ao array
     strcpy(textos[1], texto2);
@@ -696,27 +699,118 @@ int pesquisa_elemento(t_principal* s_principal, int identificador, int baseDados
             }
     }*/
 }
-void menu_estatisticas(t_principal* s_principal) {
-    int opcao = 0;
+void menu_estatisticas(t_principal* s_principal){
     system("cls");
-    opcao = obter_input(0, 3, "Visualizar estatisticas\n\n", "1 - Total faturado por Escola\n", "2 - Percentagem de transacoes por Escola\n", "3 - Total de transacoes entre duas datas por tipo de utilizador\n", "0 - Voltar atras", "\0");
+    int index = 0, opcao;
+    float total_faturado[MAX_ESCOLA];
+    int total_transacoes_percentagem[MAX_ESCOLA], total_transacoes[MAX_ESCOLA];
+    char espacos[100];
+    printf("Visualizar Estatisticas\n\n");
+    printf(" #  | ID Escola | Nome Escola                                       | Total faturado |  N%c pagamentos  |  %% pagamentos |\n", 248);
+    printf("------------------------------------------------------------------------------------------------------------------------\n");
+    for(index = 0; index < MAX_ESCOLA; index++){ 
+        if(s_principal->v_escola[index].id_escola != 0){
+            total_faturado[index] = calcula_total_faturado(s_principal, s_principal->v_escola[index].id_escola);
+            total_transacoes_percentagem[index] = calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 0);
+            total_transacoes[index] = calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 1);
+            calcula_numero_de_espacos(espacos, 5, conta_caracteres_numero(index)); 
+            printf(" %d%s", index, espacos);
+            calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(s_principal->v_escola[index].id_escola));
+            printf("%d%s", s_principal->v_escola[index].id_escola, espacos);
+            calcula_numero_de_espacos(espacos, 52, strlen(s_principal->v_escola[index].nome_escola));
+            printf("%s%s", s_principal->v_escola[index].nome_escola, espacos);
+            
+            calcula_numero_de_espacos(espacos, 18, conta_caracteres_numero(total_faturado[index]) + 3);
+            printf("%.2f%s", total_faturado[index], espacos);
+            calcula_numero_de_espacos(espacos, 19, conta_caracteres_numero(total_transacoes[index]));
+            printf("%d%s", total_transacoes[index], espacos);
+            printf("%d%%\n", total_transacoes_percentagem[index]);
+            
+        }
+    }
+    opcao = obter_input(0, 1, "\n\n\n0 - Voltar atras", "\0", "\0", "\0", "\0", "\0");
     switch(opcao){
-        case 1: break;
-        case 2: break;
-        case 3: break;
         case 0: menu_principal(s_principal); break;
         default: menu_principal(s_principal); 
     }
 }
-void total_faturado_por_escola(t_principal* s_principal){
-    system("cls");
-    printf(" #  | ID Escola | Nome Escola                                       | Total faturado (€) |\n");
-    printf("------------------------------------------------------------------------------------------\n");
+float calcula_total_faturado(t_principal * s_principal, int id_escola){
+    float total_faturado;
+    int index;
+    for(index = 0; index < MAX_TRANSACAO; index++) { // vai por todas as transacoes
+        if(s_principal->v_transacao[index].id_transacao != 0) { // se nao estiver vazio
+            if(verifica_se_utilizador_pertence_escola(s_principal, s_principal->v_transacao[index].id_utilizador, id_escola) == SUCESSO){ // se o utilizador pertence à escola inserida no parametro
+                total_faturado += s_principal->v_transacao[index].valor; // adiciona ao total faturado por essa escola
+            }
+        }
+    }
+    return total_faturado;
 }
+int calcula_percentagem_faturado_por_escola(t_principal * s_principal, int id_escola, int objetivo){
+    int percentagem_total_faturado = 0, total_transacoes = 0, transacoes_escola = 0;
+    int index;
+    for(index = 0; index < MAX_TRANSACAO; index++) { // vai por todas as transacoes
+        if(s_principal->v_transacao[index].id_transacao != 0) { // se nao estiver vazio
+            if(strcmp(s_principal->v_transacao[index].tipo_transacao, "Pagamento") != 0){
+                total_transacoes++;
+                if(verifica_se_utilizador_pertence_escola(s_principal, s_principal->v_transacao[index].id_utilizador, id_escola) == SUCESSO){ // se o utilizador pertence à escola inserida no parametro
+                    transacoes_escola++;
+                }    
+            }
+        }
+    }
+    percentagem_total_faturado = (transacoes_escola * 100) / total_transacoes;
+    if(objetivo == 0){
+        return percentagem_total_faturado;  
+    } else {
+        return transacoes_escola;
+    }
+    
+}
+int verifica_se_utilizador_pertence_escola(t_principal * s_principal, int id_utilizador, int id_escola){
+    int index, sucesso;
+    for(index = 0; index < MAX_UTILIZADOR; index++){                                // vai à procura do utilizador com o id inserido no parametro
+        if(s_principal->v_utilizador[index].id_utilizador == id_utilizador){        // se achar esse utilizador
+            if (s_principal->v_utilizador[index].id_escola == id_escola){           // verifica se o id_escola inserido como parametro é o mesmo do utilizador
+                sucesso = SUCESSO;                                                  // caso seja, define que teve sucesso
+            }
+            else {
+                sucesso = INSUCESSO;                                                // senao, define que nao teve sucesso
+            }
+        }
+    }
+    return sucesso;
+}
+
+
 void percentagem_transacaoes_por_escola(t_principal* s_principal){
     system("cls");
-    printf(" #  | ID Escola | Nome Escola                                       | %% Transacoes |\n");
-    printf("-------------------------------------------------------------------------------------\n");
+    int index = 0, opcao;
+    float total;
+    char espacos[100];
+    printf(" #  | ID Escola | Nome Escola                                       | Total faturado |\n");
+    printf("------------------------------------------------------------------------------------------\n");
+    for(index = 0; index < MAX_ESCOLA; index++){ 
+        if(s_principal->v_escola[index].id_escola != 0){
+            
+            calcula_numero_de_espacos(espacos, 5, conta_caracteres_numero(index)); 
+            printf(" %d%s", index, espacos);
+            calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(s_principal->v_escola[index].id_escola));
+            printf("%d%s", s_principal->v_escola[index].id_escola, espacos);
+            calcula_numero_de_espacos(espacos, 52, strlen(s_principal->v_escola[index].nome_escola));
+            printf("%s%s\n", s_principal->v_escola[index].nome_escola, espacos);
+            total += calcula_total_faturado(s_principal, s_principal->v_escola[index].id_escola);
+            
+        }
+    }
+    printf("%.2f\n", total);
+    opcao = obter_input(0, 1, "\n\n\n0 - Voltar atras", "\0", "\0", "\0", "\0", "\0");
+    switch(opcao){
+        case 0: menu_principal(s_principal); break;
+        default: menu_principal(s_principal); 
+    }
+}
+float calcula_total_faturado_percentagem(t_principal * s_principal, int id_escola){
 }
 void total_transacaoes_entre_duas_datas(t_principal* s_principal){
 
