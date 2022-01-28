@@ -79,8 +79,6 @@ void menu_estatisticas(t_principal* s_principal);
 void menu_sair(t_principal* s_principal);
 float calcula_percentagem_faturado_por_escola(t_principal * s_principal, int id_escola, int objetivo);
 int verifica_se_utilizador_pertence_escola(t_principal * s_principal, int id_utilizador, int id_escola);
-int verifica_se_tem_caracter(char string[], int tamanho);
-int converte_numero_string_para_int(char string[], int tamanho);
 int receber_index();
 
 void main() {
@@ -549,36 +547,14 @@ int obter_input(int minimo, int maximo, char texto1[], char texto2[], char texto
         printf("\n\n> ");
         fflush(stdin);
         
-        scanf("%s", opcao_string);                              // recebe uma string
-        fflush(stdin);
-        if(verifica_se_tem_caracter(opcao_string, sizeof(opcao_string)) == 0){
-            printf("Nao pode conter letras ou simbolos!");
-        } else {
-            opcao = converte_numero_string_para_int(opcao_string, sizeof(opcao_string));
-            if(opcao < minimo || opcao > maximo){
-                printf("Tem de ser entre %d e %d!!", minimo, maximo);
-            }
+        scanf("%d", &opcao);                              // recebe uma string
+        if(opcao < minimo || opcao > maximo){
+            printf("Tem de ser entre %d e %d!!", minimo, maximo);
         }
+        
 
     } while(opcao < minimo || opcao > maximo);                  // valores que devem ser introduzidos pelo utilizador
     return opcao;                                               // devolve a opcao escolhida
-}
-int converte_numero_string_para_int(char string[], int tamanho){
-    int index = 0, numero = 0;
-    for(index = 0; index < tamanho; index++){
-        if(string[index] >= '0' && string[index] <= '9'){          // se for um numero
-            return (string[index] - '0');
-        }
-    }
-}
-int verifica_se_tem_caracter(char string[], int tamanho){
-    int index = 0, sucesso = 1;
-    for(index = 0; index < tamanho; index++){
-        if((string[index] < '0' || string[index] > '9') && string[index] != '\0'){              // se nao for um numero
-            sucesso = 0;
-        }
-    }
-    return sucesso;
 }
 void menu_registar(t_principal* s_principal, int baseDados) {
     int opcao = 0, index = procurar_elemento_vazio(s_principal, baseDados);
