@@ -1,13 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+
 #define MAX_ESCOLA 5
 #define MAX_UTILIZADOR 200
 #define MAX_TRANSACAO 5000
 #define SUCESSO 0
 #define INSUCESSO 1
-#define BASE_DADOS_CHEIA -1
 #define ESCOLA 1
 #define UTILIZADOR 2
 #define TRANSACAO 3
@@ -20,7 +19,7 @@
 #define TAMANHO_NOME_UTILIZADOR 30
 #define TAMANHO_TIPO_UTILIZADOR 20
 #define TAMANHO_EMAIL 30
-
+#define BASE_DADOS_CHEIA -1
 
 typedef struct {
     int dia, mes, ano;
@@ -125,7 +124,7 @@ void limpa_array(t_principal* s_principal, int baseDados) {
                 limpa_elemento(s_principal, index, TRANSACAO);
             }
             break;
-        default:
+        default: 
             for (index = 0; index < MAX_ESCOLA; index++) {
                     limpa_elemento(s_principal, index, ESCOLA);
             }
@@ -137,7 +136,7 @@ void limpa_array(t_principal* s_principal, int baseDados) {
             }
     }
 }
-void limpa_elemento(t_principal* s_principal, int index, int baseDados) {
+void limpa_elemento(t_principal* s_principal, int index, int baseDados) { 
     switch(baseDados){
         case ESCOLA:
             s_principal->v_escola[index].id_escola = 0;
@@ -160,7 +159,7 @@ void limpa_elemento(t_principal* s_principal, int index, int baseDados) {
             s_principal->v_transacao[index].id_utilizador = 0;
             s_principal->v_transacao[index].valor = 0;
             strcpy(s_principal->v_transacao[index].tipo_transacao, "\0");
-            s_principal->v_transacao[index].data = (t_data){ 0, 0, 0 };
+            s_principal->v_transacao[index].data = (t_data){ 0, 0, 0 }; 
             s_principal->v_transacao[index].hora = (t_hora){ 0, 0, 0 };
     }
 }
@@ -170,36 +169,36 @@ int selecinar_base_dados() {
     do {
         system("cls");
         opcao = obter_input(0, 3, "Selecione a base de dados que deseja manipular:\n\n", "1 - Escolas\n", "2 - Utilizadores\n", "3 - Transacoes\n", "0 - Voltar atras", "\0");
-
+        
     } while (opcao < 0 && opcao > 3);
     return opcao;
 }
 int procurar_elemento_vazio(t_principal* s_principal, int baseDados) {
-    int index = 0, elemento_vazio = -1;
+     int index = 0;
     switch (baseDados) {
         case ESCOLA:
             for (index = 0; index < MAX_ESCOLA; index++) {
                 if (s_principal->v_escola[index].id_escola == 0) {
-                    elemento_vazio = index;
-                }
+                    return index;
+                } 
             }
             break;
         case UTILIZADOR:
             for (index = 0; index < MAX_UTILIZADOR; index++) {
                 if (s_principal->v_utilizador[index].id_utilizador == 0) {
-                    elemento_vazio = index;
-                }
+                    return index;
+                } 
             }
             break;
         case TRANSACAO:
-            for (int i = 0; i < MAX_TRANSACAO; index++) {
+            for (int index = 0; index < MAX_TRANSACAO; index++) {
                 if (s_principal->v_transacao[index].id_transacao == 0) {
-                    elemento_vazio = index;
-                }
+                    return index;
+                } 
             }
             break;
     }
-    return elemento_vazio;
+    return BASE_DADOS_CHEIA;
 }
 void limite_base_dados(t_principal* s_principal, int baseDados){
     int opcao = 0;
@@ -222,12 +221,12 @@ void registar_informacao(t_principal* s_principal, int index, int baseDados) {
     }
 }
 void registar_escola(t_principal* s_principal, int index) {
-    int validacao_escolas[5];
-    t_escola v_aux_escola[MAX_ESCOLA];
+    int validacao_escolas[5];                
+    t_escola v_aux_escola[MAX_ESCOLA]; 
 
     /* VERRY BIG PROBLEM INSERTING DATA MAN */
     do {
-        printf("Identificador Escola: ");
+        printf("Identificador Escola: ");   
         scanf("%d", &v_aux_escola[index].id_escola);
         validacao_escolas[0] = SUCESSO; // mais tarde mudar para uma validacao correta
         if(validacao_escolas[0] == INSUCESSO) { printf("\nEste numero precisa de ser de 1 a 5!\n\n");}
@@ -266,7 +265,7 @@ void registar_escola(t_principal* s_principal, int index) {
         strcpy(s_principal->v_escola[index].nome_escola, v_aux_escola[index].nome_escola);
         strcpy(s_principal->v_escola[index].abreviatura, v_aux_escola[index].abreviatura);
         strcpy(s_principal->v_escola[index].campus, v_aux_escola[index].campus);
-        strcpy(s_principal->v_escola[index].localizacao, v_aux_escola[index].localizacao);
+        strcpy(s_principal->v_escola[index].localizacao, v_aux_escola[index].localizacao);   
     }
 }
 void registar_utilizador(t_principal* s_principal, int index) {
@@ -406,11 +405,11 @@ void consultar_informacao(t_principal* s_principal, int baseDados) {
             }
             break;
     }
-
+    
 }
-int conta_caracteres_numero(int numero){
+int conta_caracteres_numero(int numero){     
     int count = 1;
-    while (numero > 9) {
+    while (numero > 9) {                     
         numero = numero / 10;
         count++;
     }
@@ -425,12 +424,12 @@ void calcula_numero_de_espacos(char espacos[], int numero_espacos_normalmente, i
     for(index = 0; index < numero_espacos_normalmente - tamanho_palavra; index++){
         espacos[index] = ' ';
     }
-
+    
 }
 void cabecalho_apresentar_dados(int baseDados){
     switch(baseDados){
         case ESCOLA:
-
+            
             printf(" #  | ID Escola | Nome Escola                                       | Abreviatura |  Campus   |   Localizacao         |\n");
             printf("-----------------------------------------------------------------------------------------------------------------------\n");
             break;
@@ -441,15 +440,15 @@ void cabecalho_apresentar_dados(int baseDados){
         case TRANSACAO:
             printf(" #  |  ID Transacao  |  ID Utilizador   |  Tipo Transacao  |  Valor Transacao  |   Data        |   Hora       |\n");
             printf("----------------------------------------------------------------------------------------------------------------------\n");
-            break;
+            break; 
     }
 }
-void apresentar_dados(t_principal* s_principal, int index, int baseDados){
+void apresentar_dados(t_principal* s_principal, int index, int baseDados){  
     char espacos[100];
     switch(baseDados){
-        case ESCOLA: ;
+        case ESCOLA: 
             t_escola v_aux_escola = s_principal->v_escola[index];
-            calcula_numero_de_espacos(espacos, 5, conta_caracteres_numero(index));
+            calcula_numero_de_espacos(espacos, 5, conta_caracteres_numero(index)); 
             printf(" %d%s", index, espacos);
             calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(v_aux_escola.id_escola));
             printf("%d%s", v_aux_escola.id_escola, espacos);
@@ -460,9 +459,9 @@ void apresentar_dados(t_principal* s_principal, int index, int baseDados){
             calcula_numero_de_espacos(espacos, 13, strlen(v_aux_escola.campus));
             printf("%s%s", v_aux_escola.campus, espacos);
             printf("%s\n", v_aux_escola.localizacao);  break;
-        case UTILIZADOR: ;
+        case UTILIZADOR: 
             t_utilizador v_aux_utilizador = s_principal->v_utilizador[index];
-            calcula_numero_de_espacos(espacos, 4, conta_caracteres_numero(index));
+            calcula_numero_de_espacos(espacos, 4, conta_caracteres_numero(index)); 
             printf(" %d%s", index, espacos);
             calcula_numero_de_espacos(espacos, 16, conta_caracteres_numero(v_aux_utilizador.id_utilizador));
             printf("%d%s", v_aux_utilizador.id_utilizador, espacos);
@@ -477,19 +476,19 @@ void apresentar_dados(t_principal* s_principal, int index, int baseDados){
             calcula_numero_de_espacos(espacos, 24, strlen(v_aux_utilizador.email));
             printf("%s%s", v_aux_utilizador.email, espacos);
             printf("%.2f\n", v_aux_utilizador.saldo); break;
-        case TRANSACAO: ;
+        case TRANSACAO: 
             t_transacao v_aux_transacao = s_principal->v_transacao[index];
-            calcula_numero_de_espacos(espacos, 6, conta_caracteres_numero(index));
+            calcula_numero_de_espacos(espacos, 6, conta_caracteres_numero(index)); 
             printf(" %d%s", index, espacos);
-            calcula_numero_de_espacos(espacos, 17, conta_caracteres_numero(v_aux_transacao.id_transacao));
+            calcula_numero_de_espacos(espacos, 17, conta_caracteres_numero(v_aux_transacao.id_transacao)); 
             printf("%d%s", v_aux_transacao.id_transacao, espacos);
-            calcula_numero_de_espacos(espacos, 19, conta_caracteres_numero(v_aux_transacao.id_utilizador));
+            calcula_numero_de_espacos(espacos, 19, conta_caracteres_numero(v_aux_transacao.id_utilizador)); 
             printf("%d%s", v_aux_transacao.id_utilizador, espacos);
-            calcula_numero_de_espacos(espacos, 19, strlen(v_aux_transacao.tipo_transacao));
+            calcula_numero_de_espacos(espacos, 19, strlen(v_aux_transacao.tipo_transacao)); 
             printf("%s%s", v_aux_transacao.tipo_transacao, espacos);
-            calcula_numero_de_espacos(espacos, 21, conta_caracteres_numero(v_aux_transacao.valor) + 3);
+            calcula_numero_de_espacos(espacos, 21, conta_caracteres_numero(v_aux_transacao.valor) + 3); 
             printf("%.2f%s", v_aux_transacao.valor, espacos);
-            calcula_numero_de_espacos(espacos, 15, conta_caracteres_numero(v_aux_transacao.data.dia) + conta_caracteres_numero(v_aux_transacao.data.mes) + conta_caracteres_numero(v_aux_transacao.data.ano) + 2);
+            calcula_numero_de_espacos(espacos, 15, conta_caracteres_numero(v_aux_transacao.data.dia) + conta_caracteres_numero(v_aux_transacao.data.mes) + conta_caracteres_numero(v_aux_transacao.data.ano) + 2); 
             printf("%02d/%02d/%04d%s", v_aux_transacao.data.dia, v_aux_transacao.data.mes, v_aux_transacao.data.ano, espacos);
             printf("%02d:%02d:%02d\n", v_aux_transacao.hora.hora, v_aux_transacao.hora.minuto, v_aux_transacao.hora.segundo);  break;
     }
@@ -608,7 +607,7 @@ int receber_index(){
     int index = 0;
     printf("\n\n    INDEX (#)  --->   ");
     scanf("%d", &index);
-    return index;
+    return index;    
 }
 void apagar_elemento(t_principal* s_principal, int index, int baseDados){
     system("cls");
@@ -649,7 +648,7 @@ void alterar_elemento(t_principal* s_principal, int index, int baseDados) {
             case 1:  // Sim
                 registar_informacao(s_principal, index, baseDados);
                 menu_consultar(s_principal, baseDados);
-                break;
+                break;    
             case 2: menu_consultar(s_principal, baseDados); break;// Nao
             case 3: apagar_elemento(s_principal, receber_index(), baseDados); break; // Escolher outro elemento
             case 0: menu_principal(s_principal); break;// Voltar atras
@@ -663,7 +662,7 @@ void alterar_elemento(t_principal* s_principal, int index, int baseDados) {
             case 0: menu_consultar(s_principal, baseDados); break;
         }
     }
-
+    
 }
 int verificar_se_existe(t_principal * s_principal, int index, int baseDados){
     int indexFor = 0, existe = 0;
@@ -713,18 +712,18 @@ int pesquisa_elemento(t_principal* s_principal, int identificador, int baseDados
 void menu_estatisticas(t_principal* s_principal){
     system("cls");
     int index = 0, opcao;
-    float total_faturado = 0;
-    int total_transacoes_percentagem = 0, total_transacoes = 0;
+    float total_faturado;
+    int total_transacoes_percentagem, total_transacoes;
     char espacos[100];
     printf("Visualizar Estatisticas\n\n");
     printf(" #  | ID Escola | Nome Escola                                       | Total faturado |  N%c pagamentos  |  %% pagamentos |\n", 248);
     printf("------------------------------------------------------------------------------------------------------------------------\n");
-    for(index = 0; index < MAX_ESCOLA; index++){
+    for(index = 0; index < MAX_ESCOLA; index++){ 
         if(s_principal->v_escola[index].id_escola != 0){
             total_faturado = calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 2);
             total_transacoes_percentagem = (int)calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 0);
             total_transacoes = (int)calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 1);
-            calcula_numero_de_espacos(espacos, 5, conta_caracteres_numero(index));
+            calcula_numero_de_espacos(espacos, 5, conta_caracteres_numero(index)); 
             printf(" %d%s", index, espacos);
             calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(s_principal->v_escola[index].id_escola));
             printf("%d%s", s_principal->v_escola[index].id_escola, espacos);
@@ -735,19 +734,19 @@ void menu_estatisticas(t_principal* s_principal){
             calcula_numero_de_espacos(espacos, 19, conta_caracteres_numero(total_transacoes));
             printf("%d%s", total_transacoes, espacos);
             printf("%d%%\n", total_transacoes_percentagem);
-
+            
         }
     }
     opcao = obter_input(0, 1, "\n\n\n0 - Voltar atras", "\0", "\0", "\0", "\0", "\0");
     switch(opcao){
         case 0: menu_principal(s_principal); break;
-        default: menu_principal(s_principal);
+        default: menu_principal(s_principal); 
     }
 }
 float calcula_percentagem_faturado_por_escola(t_principal * s_principal, int id_escola, int objetivo){
     int percentagem_total_faturado = 0, total_transacoes = 0, transacoes_escola = 0;
     int index;
-    float total_faturado = 0;
+    float total_faturado;
     for(index = 0; index < MAX_TRANSACAO; index++) { // vai por todas as transacoes
         if(s_principal->v_transacao[index].id_transacao != 0) { // se nao estiver vazio
             if(strcmp(s_principal->v_transacao[index].tipo_transacao, "Pagamento") == 0){
@@ -755,19 +754,19 @@ float calcula_percentagem_faturado_por_escola(t_principal * s_principal, int id_
                 if(verifica_se_utilizador_pertence_escola(s_principal, s_principal->v_transacao[index].id_utilizador, id_escola) == SUCESSO){ // se o utilizador pertence à escola inserida no parametro
                     transacoes_escola++;
                     total_faturado += s_principal->v_transacao[index].valor;
-                }
+                }    
             }
         }
     }
-    percentagem_total_faturado = transacoes_escola != 0 ? (transacoes_escola * 100) / total_transacoes : 0;
+    percentagem_total_faturado = (transacoes_escola * 100) / total_transacoes;
     if(objetivo == 0){
-        return (float)percentagem_total_faturado;
+        return (float)percentagem_total_faturado;  
     } else if (objetivo == 1){
         return (float)transacoes_escola;
     } else if (objetivo == 2){
         return total_faturado;
     }
-
+    
 }
 int verifica_se_utilizador_pertence_escola(t_principal * s_principal, int id_utilizador, int id_escola){
     int index, sucesso;
@@ -783,12 +782,16 @@ int verifica_se_utilizador_pertence_escola(t_principal * s_principal, int id_uti
     }
     return sucesso;
 }
+
+
+
+
 void menu_sair(t_principal* s_principal) {
     int opcao = 0;
     system("cls");
     opcao = obter_input(0, 2, "Sair da aplicacao\n\n", "Deseja guardar a informacao registada?\n", "1 - Guardar\n", "2 - Nao guardar\n", "0 - Voltar atras", "\0");
     switch(opcao){
-        case 1:
+        case 1: 
             gravar_no_ficheiro(s_principal);
             system("cls");
             printf("Sair da Aplicacao\n\n");
