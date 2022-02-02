@@ -21,6 +21,10 @@
 #define TAMANHO_EMAIL 30
 #define BASE_DADOS_CHEIA -1
 
+#define IGUAL 0
+#define MAIOR 1
+#define MENOR 2
+
 typedef struct {
     int dia, mes, ano;
 } t_data;
@@ -74,11 +78,18 @@ void menu_registar(t_principal* s_principal, int baseDados);
 void menu_consultar(t_principal* s_principal, int baseDados);
 void alterar_elemento(t_principal* s_principal, int index, int baseDados);
 void apagar_elemento(t_principal* s_principal, int index, int baseDados);
-void menu_estatisticas(t_principal* s_principal);
+void menu_estatisticas(t_principal* s_principal, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]);
 void menu_sair(t_principal* s_principal);
-float calcula_percentagem_faturado_por_escola(t_principal * s_principal, int id_escola, int objetivo);
+float calcula_percentagem_faturado_por_escola(t_principal * s_principal, int id_escola, int objetivo, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]);
 int verifica_se_utilizador_pertence_escola(t_principal * s_principal, int id_utilizador, int id_escola);
 int receber_index();
+void escrever_filtos(t_principal *s_principal);
+void obter_data(int * dia, int * mes, int * ano);
+void obter_hora(int * hora, int * minuto, int * segundo);
+int verifica_mes(int mes);
+int verifica_tipo_utilizador(t_principal * s_principal, int id_utilizador, char tipoUtilizador[]);
+int verifica_se_data_esta_dentro(t_data dataInserida,t_data dataComparar);
+void obter_int(int * numero, int minimo, int maximo);
 
 void main() {
     t_principal s_principal;
@@ -332,44 +343,28 @@ void registar_transacao(t_principal* s_principal, int index) {
     int validacao_transacoes[6];
     t_transacao v_aux_transacao[MAX_TRANSACAO];
     fflush(stdin);
+    printf("Identificador Transacao: ");
+    obter_int(&v_aux_transacao[index].id_transacao, 0, 5000);
+    printf("Identificador Utilizador: ");
+    obter_int(&v_aux_transacao[index].id_utilizador, 0, 99999999);
     do {
-        printf("Identificador Transacao: ");
-        scanf("%d", &v_aux_transacao[index].id_transacao);
-        validacao_transacoes[0] = SUCESSO; // mais tarde mudar para uma validacao correta
-        if(validacao_transacoes[0] == INSUCESSO) { printf("\nO numero tem que ser entre 1 e 5000!!\n\n");}
-    } while (validacao_transacoes[0] == INSUCESSO);
-    do {
-        printf("Identificador Utilizador: ");
-        scanf("%d", &v_aux_transacao[index].id_utilizador);
-        validacao_transacoes[1] = SUCESSO; // mais tarde mudar para uma validacao correta
-        if(validacao_transacoes[1] == INSUCESSO) { printf("\nO numero tem que ser entre 1 e 2000!!\n\n");}
-    } while (validacao_transacoes[1] == INSUCESSO);
-    do {
-        fflush(stdin);
         printf("Tipo Transacao: ");
-        scanf("%s", v_aux_transacao[index].tipo_transacao);
-        validacao_transacoes[2] = SUCESSO; // mais tarde mudar para uma validacao correta
-        if(validacao_transacoes[2] == INSUCESSO) { printf("\nO tipo tem que ser 'Carregamento' ou 'Pagamento'!!\n\n");}
-    } while (validacao_transacoes[2] == INSUCESSO);
+        scanf("%s", &v_aux_transacao[index].tipo_transacao);
+        validacao_transacoes[3] = SUCESSO; // mais tarde mudar para uma validacao correta
+        if(validacao_transacoes[3] == INSUCESSO) { printf("\nO valor da transacao tem de ser positivo!!\n\n");}
+    } while (validacao_transacoes[3] == INSUCESSO);
     do {
         printf("Valor Transacao: ");
         scanf("%f", &v_aux_transacao[index].valor);
         validacao_transacoes[3] = SUCESSO; // mais tarde mudar para uma validacao correta
         if(validacao_transacoes[3] == INSUCESSO) { printf("\nO valor da transacao tem de ser positivo!!\n\n");}
     } while (validacao_transacoes[3] == INSUCESSO);
-    do {
-        printf("Data (FORMATO dd/mm/yyyy): ");
-        scanf("%d/%d/%d", &v_aux_transacao[index].data.dia, &v_aux_transacao[index].data.mes, &v_aux_transacao[index].data.ano);
-        validacao_transacoes[4] = SUCESSO; // mais tarde mudar para uma validacao correta
-        if(validacao_transacoes[4] == INSUCESSO) { printf("\nA data tem que ser valida!!\n\n");}
-    } while (validacao_transacoes[4] == INSUCESSO);
-    do {
-        printf("Hora (FORMATO hh:mm:ss): ");
-        scanf("%d:%d:%d", &v_aux_transacao[index].hora.hora, &v_aux_transacao[index].hora.minuto, &v_aux_transacao[index].hora.segundo);
-        validacao_transacoes[5] = SUCESSO; // mais tarde mudar para uma validacao correta
-        if(validacao_transacoes[5] == INSUCESSO) { printf("\nA hora tem que ser valida!!\n\n");}
-    } while (validacao_transacoes[5] == INSUCESSO);
-    if (validacao_transacoes[0] == SUCESSO && validacao_transacoes[1] == SUCESSO && validacao_transacoes[2] == SUCESSO && validacao_transacoes[3] == SUCESSO && validacao_transacoes[4] == SUCESSO && validacao_transacoes[5] == SUCESSO)
+    printf("Data (FORMATO dd/mm/yyyy): ");
+    obter_data(&v_aux_transacao[index].data.dia, &v_aux_transacao[index].data.mes, &v_aux_transacao[index].data.ano);    
+    printf("Hora (FORMATO hh:mm:ss): ");
+    obter_hora(&v_aux_transacao[index].hora.hora, &v_aux_transacao[index].hora.minuto, &v_aux_transacao[index].hora.segundo);   
+
+    if (validacao_transacoes[3] == SUCESSO)
     {
         s_principal->v_transacao[index].id_transacao = v_aux_transacao[index].id_transacao;
         s_principal->v_transacao[index].id_utilizador = v_aux_transacao[index].id_utilizador;
@@ -495,15 +490,16 @@ void apresentar_dados(t_principal* s_principal, int index, int baseDados){
 }
 
 void menu_principal(t_principal* s_principal) {
-    int opcao = 0, index;
     system("cls");
-    float total_faturado;
-    char espacos[100];
+    int opcao = 0, index; float total_faturado; char espacos[100];
+    t_data dataInicial = {0, 0, 0}, dataFinal = {0, 0, 0};
+    dataInicial.dia = 0;
+    
     printf(" #  | ID Escola | Nome Escola                                       | Total faturado |\n");
     printf("--------------------------------------------------------------------------------------\n");
     for(index = 0; index < MAX_ESCOLA; index++){
         if(s_principal->v_escola[index].id_escola != 0){
-            total_faturado = calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 2);
+            total_faturado = calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 2, dataInicial, dataFinal, "\0");
             calcula_numero_de_espacos(espacos, 5, conta_caracteres_numero(index));
             printf(" %d%s", index, espacos);
             calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(s_principal->v_escola[index].id_escola));
@@ -511,14 +507,13 @@ void menu_principal(t_principal* s_principal) {
             calcula_numero_de_espacos(espacos, 52, strlen(s_principal->v_escola[index].nome_escola));
             printf("%s%s", s_principal->v_escola[index].nome_escola, espacos);
             printf("%.2f\n", total_faturado);
-
         }
     }
     opcao = obter_input(0, 4, "\n\nMenu Principal\n\n", "1 - Registar informacao\n", "2 - Consultar informacao\n", "3 - Estatisticas\n", "4 - Gravar no ficheiro\n", "0 - Sair da aplicacao");
     switch (opcao) {
         case 1: menu_registar(s_principal, selecinar_base_dados()); break;
         case 2: menu_consultar(s_principal, selecinar_base_dados()); break;
-        case 3: menu_estatisticas(s_principal); break;
+        case 3: menu_estatisticas(s_principal, dataInicial, dataFinal, "\0"); break;
         case 4: gravar_no_ficheiro(s_principal); menu_principal(s_principal); break;
         case 0: menu_sair(s_principal); break;
         default: menu_principal(s_principal); break;
@@ -709,20 +704,25 @@ int pesquisa_elemento(t_principal* s_principal, int identificador, int baseDados
             }
     }*/
 }
-void menu_estatisticas(t_principal* s_principal){
+void menu_estatisticas(t_principal* s_principal, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]){
     system("cls");
     int index = 0, opcao;
     float total_faturado;
     int total_transacoes_percentagem, total_transacoes;
     char espacos[100];
     printf("Visualizar Estatisticas\n\n");
+    if(dataInicial.dia != 0){printf("Data Inicial: %d/%d/%d\n", dataInicial.dia, dataInicial.mes, dataInicial.ano);} 
+    else {printf("Data Inicial: \n");}
+    if(dataFinal.dia != 0){printf("Data Final: %d/%d/%d\n", dataFinal.dia, dataFinal.mes, dataFinal.ano);}
+    else {printf("Data Final: \n");}
+    printf("Tipo de utilizador: %s\n\n", tipoUtilizador);
     printf(" #  | ID Escola | Nome Escola                                       | Total faturado |  N%c pagamentos  |  %% pagamentos |\n", 248);
     printf("------------------------------------------------------------------------------------------------------------------------\n");
     for(index = 0; index < MAX_ESCOLA; index++){ 
         if(s_principal->v_escola[index].id_escola != 0){
-            total_faturado = calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 2);
-            total_transacoes_percentagem = (int)calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 0);
-            total_transacoes = (int)calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 1);
+            total_faturado = calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 2, dataInicial, dataFinal, tipoUtilizador);
+            total_transacoes_percentagem = (int)calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 0, dataInicial, dataFinal, tipoUtilizador);
+            total_transacoes = (int)calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 1, dataInicial, dataFinal, tipoUtilizador);
             calcula_numero_de_espacos(espacos, 5, conta_caracteres_numero(index)); 
             printf(" %d%s", index, espacos);
             calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(s_principal->v_escola[index].id_escola));
@@ -734,27 +734,141 @@ void menu_estatisticas(t_principal* s_principal){
             calcula_numero_de_espacos(espacos, 19, conta_caracteres_numero(total_transacoes));
             printf("%d%s", total_transacoes, espacos);
             printf("%d%%\n", total_transacoes_percentagem);
-            
         }
     }
-    opcao = obter_input(0, 1, "\n\n\n0 - Voltar atras", "\0", "\0", "\0", "\0", "\0");
+    opcao = obter_input(0, 1, "\n\n\n1 - Filtros","\n0 - Voltar atras", "\0", "\0", "\0", "\0");
     switch(opcao){
+        case 1: escrever_filtos(s_principal); break;
         case 0: menu_principal(s_principal); break;
         default: menu_principal(s_principal); 
     }
 }
-float calcula_percentagem_faturado_por_escola(t_principal * s_principal, int id_escola, int objetivo){
+void escrever_filtos(t_principal *s_principal){
+    t_data dataInicial, dataFinal; 
+    char tipoUtilizador[20];
+    printf("Data Inicial (FORMATO dd/mm/yyyy): ");
+    obter_data(&dataInicial.dia, &dataInicial.mes, &dataInicial.ano);
+    printf("Data Final (FORMATO dd/mm/yyyy): ");
+    obter_data(&dataFinal.dia, &dataFinal.mes, &dataFinal.ano);
+    printf("Tipo de Utilizador: ");
+    scanf("%s", tipoUtilizador);
+    menu_estatisticas(s_principal, dataInicial, dataFinal, tipoUtilizador);
+}
+void obter_data(int * dia, int * mes, int * ano){
+    int max_dia = 0, sucesso = INSUCESSO; char stringData[15]; t_data auxiliar;
+    do{
+        scanf("%s", stringData);
+        if(stringData[2] == '/' && stringData[5] == '/'){
+            if((stringData[0] >= '0' && stringData[0] <= '9') && (stringData[1] >= '0' && stringData[1] <= '9')){
+                if((stringData[3] >= '0' && stringData[3] <= '9') && (stringData[4] >= '0' && stringData[4] <= '9')){
+                    if((stringData[6] >= '0' && stringData[6] <= '9') && (stringData[7] >= '0' && stringData[7] <= '9') && (stringData[8] >= '0' && stringData[8] <= '9') && stringData[9] >= '0' && stringData[9] <= '9'){
+                        auxiliar.dia = ((stringData[0] - '0') * 10) + (stringData[1] - '0');
+                        auxiliar.mes = ((stringData[3] - '0') * 10) + (stringData[4] - '0');
+                        auxiliar.ano = (stringData[6] - '0') * 1000 + (stringData[7] - '0') * 100 + (stringData[8] -'0') * 10 + (stringData[9] - '0');
+                        if(auxiliar.ano >= 1900 && auxiliar.ano <= 2022){
+                            if(auxiliar.mes >= 1 && auxiliar.mes <= 12){
+                                max_dia = verifica_mes(auxiliar.mes);
+                                if(auxiliar.dia >= 1 && auxiliar.dia <= max_dia){
+                                    *dia = auxiliar.dia;
+                                    *mes = auxiliar.mes;
+                                    *ano = auxiliar.ano;
+                                    sucesso = SUCESSO;
+                                } else { printf("\nDia invalido! Tem de ser entre 1 e %d!\n\nData (FORMATO dd/mm/yyyy): ", max_dia);}
+                            } else { printf("\nMes invalido! Tem de ser entre 1 e 12!\n\nData (FORMATO dd/mm/yyyy): ");}
+                        } else { printf("\nAno invalido! Tem de ser entre 1900 e 2022!\n\nData (FORMATO dd/mm/yyyy): ");}
+                    }else { printf("\nAno invalido! Tem de ser entre 1900 e 2022!\n\nData (FORMATO dd/mm/yyyy): ");}
+                } else { printf("\nMes invalido! Tem de ser entre 1 e 12!\n\nData (FORMATO dd/mm/yyyy): ");}
+            } else { printf("\nDia invalido! Tem de ser entre 1 e 31!\n\nData (FORMATO dd/mm/yyyy): ");}
+        } else { printf("\nFormato de data invalido  (FORMATO dd/mm/yyy)\n\nData (FORMATO dd/mm/yyyy): ");}
+    } while (sucesso == INSUCESSO);
+}
+void obter_hora(int * hora, int * minuto, int * segundo){
+    int sucesso = INSUCESSO; char stringData[15]; t_hora auxiliar;
+    do{
+        scanf("%s", stringData);
+        if(stringData[2] == ':' && stringData[5] == ':'){
+            if((stringData[0] >= '0' && stringData[0] <= '9') && (stringData[1] >= '0' && stringData[1] <= '9')){
+                if((stringData[3] >= '0' && stringData[3] <= '9') && (stringData[4] >= '0' && stringData[4] <= '9')){
+                    if((stringData[6] >= '0' && stringData[6] <= '9') && (stringData[7] >= '0' && stringData[7] <= '9')){
+                        auxiliar.hora = ((stringData[0] - '0') * 10) + (stringData[1] - '0');
+                        auxiliar.minuto = ((stringData[3] - '0') * 10) + (stringData[4] - '0');
+                        auxiliar.segundo = (stringData[6] - '0') * 10 + (stringData[7] - '0');
+                        if(auxiliar.segundo >= 0 && auxiliar.segundo <= 59){
+                            if(auxiliar.minuto >= 0 && auxiliar.minuto <= 59){
+                                if(auxiliar.hora >= 0 && auxiliar.hora <= 23){
+                                    *hora = auxiliar.hora;
+                                    *minuto = auxiliar.minuto;
+                                    *segundo = auxiliar.segundo;
+                                    sucesso = SUCESSO;
+                                } else { printf("\nHora invalida! Tem de ser entre 00 e 23!\n\nHora (FORMATO hh:mm:ss): ");}
+                            } else { printf("\nMinutos invalidos! Tem de ser entre 0 e 59!\n\nHora (FORMATO hh:mm:ss): ");}
+                        } else { printf("\nSegundos invalidos! Tem de ser entre 0 e 59!\n\nHora (FORMATO hh:mm:ss): ");}
+                    }else { printf("\nSegundos invalidos! Tem de ser entre 0 e 59!\n\nHora (FORMATO hh:mm:ss): ");}
+                } else { printf("\nMinutos invalidos! Tem de ser entre 0 e 59!\n\nHora (FORMATO hh:mm:ss): ");}
+            } else { printf("\nHora invalida! Tem de ser entre 0 e 23!\n\nHora (FORMATO hh:mm:ss): ");}
+        } else { printf("\nFormato de hora invalido  (FORMATO hh:mm:ss)\n\nHora (FORMATO hh:mm:ss): ");}
+    } while (sucesso == INSUCESSO);
+}
+void obter_int(int * numero, int minimo, int maximo){
+    int auxiliar = 0;
+    do{
+        scanf("%d", &auxiliar);
+        if(auxiliar >= maximo || auxiliar < minimo){
+            printf("\n\nValor tem de ser entre %d e %d!\n\n> ", minimo, maximo);
+        }
+    } while(auxiliar > maximo || auxiliar < minimo);
+    *numero = auxiliar;
+}
+int verifica_mes(int mes){
+    int max_dia;
+    switch(mes){
+        case 1:
+        case 3:
+        case 5:
+        case 7:
+        case 8:
+        case 10:
+        case 12:
+            max_dia = 31;
+            break;
+        case 4:
+        case 6:
+        case 9:
+        case 11:
+            max_dia = 30;
+            break;
+        case 2:
+            max_dia = 28;
+            break;
+    }
+    return max_dia;
+}
+float calcula_percentagem_faturado_por_escola(t_principal * s_principal, int id_escola, int objetivo, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]){
     int percentagem_total_faturado = 0, total_transacoes = 0, transacoes_escola = 0;
     int index;
     float total_faturado;
     for(index = 0; index < MAX_TRANSACAO; index++) { // vai por todas as transacoes
         if(s_principal->v_transacao[index].id_transacao != 0) { // se nao estiver vazio
             if(strcmp(s_principal->v_transacao[index].tipo_transacao, "Pagamento") == 0){
-                total_transacoes++;
-                if(verifica_se_utilizador_pertence_escola(s_principal, s_principal->v_transacao[index].id_utilizador, id_escola) == SUCESSO){ // se o utilizador pertence à escola inserida no parametro
-                    transacoes_escola++;
-                    total_faturado += s_principal->v_transacao[index].valor;
-                }    
+               // if(dataInicial.dia == 0){
+                    total_transacoes++;
+                    if(verifica_se_utilizador_pertence_escola(s_principal, s_principal->v_transacao[index].id_utilizador, id_escola) == SUCESSO){ 
+                        transacoes_escola++;
+                        total_faturado += s_principal->v_transacao[index].valor;
+                    } 
+                /*} else {
+                    if(verifica_se_data_esta_dentro(s_principal->v_transacao[index].data, dataInicial) == MAIOR){
+                        if(verifica_se_data_esta_dentro(s_principal->v_transacao[index].data, dataInicial) == MENOR){
+                            if(verifica_tipo_utilizador(s_principal, s_principal->v_transacao[index].id_utilizador, tipoUtilizador) == 0){
+                                total_transacoes++;
+                                if(verifica_se_utilizador_pertence_escola(s_principal, s_principal->v_transacao[index].id_utilizador, id_escola) == SUCESSO){ 
+                                    transacoes_escola++;
+                                    total_faturado += s_principal->v_transacao[index].valor;
+                                }  
+                            }
+                        }
+                    } 
+                }*/
             }
         }
     }
@@ -767,6 +881,29 @@ float calcula_percentagem_faturado_por_escola(t_principal * s_principal, int id_
         return total_faturado;
     }
     
+}
+int verifica_se_data_esta_dentro(t_data dataInserida,t_data dataComparar){
+    int verificador = IGUAL;
+    if(dataInserida.ano < dataComparar.ano){
+        verificador = MENOR;
+    } else if(dataInserida.ano > dataComparar.ano){
+        verificador = MAIOR;
+    } else {
+        if(dataInserida.mes < dataComparar.mes){
+            verificador = MENOR;
+        } else if (dataInserida.mes > dataComparar.mes) {
+            verificador = MAIOR;
+        } else {
+            if(dataInserida.dia < dataComparar.dia){
+                verificador = MENOR;
+            } else if(dataInserida.dia > dataComparar.dia){
+                verificador = MAIOR;
+            } else {
+                verificador = IGUAL;
+            }
+        }
+    }
+    return verificador;
 }
 int verifica_se_utilizador_pertence_escola(t_principal * s_principal, int id_utilizador, int id_escola){
     int index, sucesso;
@@ -782,10 +919,19 @@ int verifica_se_utilizador_pertence_escola(t_principal * s_principal, int id_uti
     }
     return sucesso;
 }
-
-
-
-
+int verifica_tipo_utilizador(t_principal * s_principal, int id_utilizador, char tipoUtilizador[]){
+    int index, sucesso;
+    for(index = 0; index < MAX_UTILIZADOR; index++){                                // vai à procura do utilizador com o id inserido no parametro
+        if(s_principal->v_utilizador[index].id_utilizador == id_utilizador){        // se achar esse utilizador
+            if (strcmp(s_principal->v_utilizador[index].tipo_utilizador, tipoUtilizador) == 0){           // verifica se o id_escola inserido como parametro é o mesmo do utilizador
+                sucesso = SUCESSO;                                                  // caso seja, define que teve sucesso
+            }else {
+                sucesso = INSUCESSO;                                                // senao, define que nao teve sucesso
+            }
+        }
+    }
+    return sucesso;
+}
 void menu_sair(t_principal* s_principal) {
     int opcao = 0;
     system("cls");
