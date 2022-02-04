@@ -1,11 +1,28 @@
+/* 
+    Autores: Marco Padeiro (2211868) & Tomas Moura (2211866)          | GRUPO 7-PL2 |
+    Escola: Escola Superior de Tecnologia e Gestão (ESTG)
+    Curso: TESP de Programação de Sistemas de Informação (Diurno) - Ano 1
+    Unidade Curricular: Fundamentos de Programação (FP)
+    Docente(s): 
+        José Vítor Martins Ramos
+        Roberto Aguiar Ribeiro
+    Ano Letivo: 2021/2022
+
+    Objetivos da Aplicação: 
+        Efetuar a gestão das operações de  carregamento e pagamento (transações)
+        do sistema SIGA nos bares e cantinas do Politécnico de Leiria.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+// LIMITE DE ELEMENTOS NA BASE DE DADOS
 #define MAX_ESCOLA 5
 #define MAX_UTILIZADOR 200
 #define MAX_TRANSACAO 5000
 
+// FACILITAR LEITURA DO CODIGO
 #define SUCESSO 0
 #define INSUCESSO 1
 
@@ -13,6 +30,13 @@
 #define UTILIZADOR 2
 #define TRANSACAO 3
 
+#define BASE_DADOS_CHEIA -1
+
+#define IGUAL 0
+#define MAIOR 1
+#define MENOR 2
+
+// TAMANHO MAXIMO DE CADA STRING
 #define TAMANHO_NOME_ESCOLA 60
 #define TAMANHO_TIPO_TRANSACAO 30
 #define TAMANHO_ABREVIATURA 10
@@ -22,8 +46,7 @@
 #define TAMANHO_TIPO_UTILIZADOR 20
 #define TAMANHO_EMAIL 30
 
-#define BASE_DADOS_CHEIA -1
-
+// MESES
 #define JANEIRO 1
 #define FEVEREIRO 2
 #define MARCO 3
@@ -37,9 +60,6 @@
 #define NOVEMBRO 11
 #define DEZEMBRO 12
 
-#define IGUAL 0
-#define MAIOR 1
-#define MENOR 2
 
 typedef struct {
     int dia, mes, ano;
@@ -69,76 +89,357 @@ typedef struct {
     t_transacao v_transacao[MAX_TRANSACAO];
 } t_principal;
 
-void ler_ficheiro(t_principal * s_principal);
-void gravar_no_ficheiro(t_principal* s_principal);
+// Funções responsaveis pela manipulação de ficheiros
+void ler_ficheiro(t_principal * s_principal);              // le a informação no ficheiro e insere no endereço da variavel passada por parametro
+void gravar_no_ficheiro(t_principal* s_principal);         // guarda a informação do parametro no ficheiro
+
+// Funções responsaveis por mostrar menus e informações
+void menu_principal(t_principal* s_principal);
+void menu_registar(t_principal* s_principal, int baseDados);
+void menu_consultar(t_principal* s_principal, int baseDados);
+void apresentar_dados(t_principal* s_principal, int index, int baseDados);
+void apresentar_escolas(t_principal* s_principal, int index, int baseDados);
+void apresentar_utilizadores(t_principal* s_principal, int index, int baseDados);
+void apresentar_transacoes(t_principal* s_principal, int index, int baseDados);
+void cabecalho_apresentar_dados(int index);
+void menu_estatisticas(t_principal* s_principal, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]);
+void escrever_elemento_tabela_estatisticas(t_principal * s_principal, t_data dataInicial, t_data dataFinal, char tipoUtilizador[], int index);
+void menu_sair(t_principal* s_principal);
+void limite_base_dados(t_principal* s_principal, int baseDados);
+
+// Funções responsaveis por manipular a base de dados armazenada na memoria
 void limpa_array(t_principal* s_principal, int baseDados);
-int obter_input(int minimo, int maximo, char texto1[], char texto2[], char texto3[], char texto4[], char texto5[], char texto6[]);
 void limpa_elemento(t_principal* s_principal, int index, int baseDados);
 void registar_informacao(t_principal* s_principal, int index, int baseDados);
 void registar_escola(t_principal* s_principal, int index);
 void registar_utilizador(t_principal* s_principal, int index);
 void registar_transacao(t_principal* s_principal, int index);
 void consultar_informacao(t_principal* s_principal, int baseDados);
-void apresentar_dados(t_principal* s_principal, int index, int baseDados);
-void cabecalho_apresentar_dados(int index);
-int procurar_elemento_vazio(t_principal* s_principal, int baseDados);
-int pesquisa_elemento(t_principal* s_principal, int identificador, int baseDados);
-int selecinar_base_dados();
-int conta_caracteres_string(char string[], int tamanho);
-int conta_caracteres_numero(int numero);
-void calcula_numero_de_espacos(char espacos[], int numero_espacos_normalmente, int tamanho_palavra);
-int verificar_se_existe(t_principal * s_principal, int index, int baseDados);
-void limite_base_dados(t_principal* s_principal, int baseDados);
-void menu_principal(t_principal* s_principal);
-void menu_registar(t_principal* s_principal, int baseDados);
-void menu_consultar(t_principal* s_principal, int baseDados);
 void alterar_elemento(t_principal* s_principal, int index, int baseDados);
 void apagar_elemento(t_principal* s_principal, int index, int baseDados);
-void menu_estatisticas(t_principal* s_principal, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]);
-void menu_sair(t_principal* s_principal);
-float calcula_percentagem_faturado_por_escola(t_principal * s_principal, int id_escola, int objetivo, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]);
-int verifica_se_utilizador_pertence_escola(t_principal * s_principal, int id_utilizador, int id_escola);
+
+// Funções responsaveis por obter input do utilizador
+int selecinar_base_dados();
 int receber_index();
-void escrever_filtos(t_principal *s_principal);
+int obter_input(int minimo, int maximo, char texto1[], char texto2[], char texto3[], char texto4[], char texto5[], char texto6[]);
 void obter_data(int * dia, int * mes, int * ano);
 void obter_hora(int * hora, int * minuto, int * segundo);
-int verifica_mes(int mes);
-int verifica_tipo_utilizador(t_principal * s_principal, int id_utilizador, char tipoUtilizador[]);
-int verifica_se_data_esta_dentro(t_data dataInserida,t_data dataComparar);
 void obter_int(int * numero, int minimo, int maximo);
-void escrever_elemento_tabela_estatisticas(t_principal * s_principal, t_data dataInicial, t_data dataFinal, char tipoUtilizador[], int index);
-int diferenca_caracteres(char string1[], char string2[]);
 void obter_string(char string[], char string_a_comparar_1[], char string_a_comparar_2[], char string_a_comparar_3[], int maxDiff, int palavraDiferente);
 void obter_identificador(t_principal * s_principal, int * identificador, int baseDados, int existe);
 void obter_email(char email[]);
-void main() { // 5 linhas
-    t_principal s_principal;
-    limpa_array(&s_principal, 0);
-    system("cls");
-    ler_ficheiro(&s_principal);
-    menu_principal(&s_principal);
+void escrever_filtos(t_principal *s_principal);
+
+// Funções responsaveis por fazer calculos e pesquisas na base de dados
+int procurar_elemento_vazio(t_principal* s_principal, int baseDados);                // devolve o elemento vazio
+int conta_caracteres_numero(int numero);                                             // devolve quantos caracteres um numero tem
+void calcula_numero_de_espacos(char espacos[], int numero_espacos_normalmente, int tamanho_palavra); // calcula o numero de espaços entre uma palavra e outra (utilizado na tabela)
+int verificar_se_existe(t_principal * s_principal, int index, int baseDados);        // verifica se o elemento ja existe na base de dados
+float calcula_percentagem_faturado_por_escola(t_principal * s_principal, int id_escola, int objetivo, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]);
+int verifica_se_utilizador_pertence_escola(t_principal * s_principal, int id_utilizador, int id_escola); // verifica se um utilizador pertence a certa escola
+int verifica_mes(int mes);  // Função responsavel por devolver o maximo de dias de cada mes (EX: Fevereiro: 28 dias)
+int verifica_tipo_utilizador(t_principal * s_principal, int id_utilizador, char tipoUtilizador[]); // verifica se 
+int verifica_se_data_esta_dentro(t_data dataInserida,t_data dataComparar); // verifica se a data está entre os parametros introduzidos
+int diferenca_caracteres(char string1[], char string2[]); // devole quantos caracteres são diferentes entre a string1 e string2
+
+
+void main() { // 4 linhas
+    t_principal s_principal;                     // cria uma variavel responsavel por armazenar a base de dados na memoria
+    limpa_array(&s_principal, 0);                // define todos os valores da base de dados para 0 ou vazio            // prevenção de erros 
+    ler_ficheiro(&s_principal);                  // le a informação do ficheiro e insere no endereço da base de dados da memoria
+    menu_principal(&s_principal);                // Apresenta o menu principal
 }
-void ler_ficheiro(t_principal* s_principal) { // 10 linhas
-    FILE* ficheiro;
-    ficheiro = fopen("baseDados.bin", "rb");
-    if (ficheiro == NULL) {
-        printf("!!!AVISO!!! Ficheiro nao encontrado!!\n\n");
+
+
+//********************
+//*    FICHEIROS     *
+//********************
+void ler_ficheiro(t_principal* s_principal) { // 9 linhas
+    FILE* ficheiro;                                             // cria uma variavel do tipo FILE que armazena o ficheiro   
+    ficheiro = fopen("baseDados.bin", "rb");                    // abre o ficheiro no modo READONLY em binário
+    if (ficheiro == NULL) {                                     // verifica se o ficheiro existe
+        printf("!!!AVISO!!! Ficheiro nao encontrado!!\n\n");    
+    }else {                                                     // caso exista
+        fread(s_principal, sizeof(t_principal), 1, ficheiro);   // insere a informação do ficheiro na variavel passada por parametro "s_principal", que neste caso é a base de dados na memoria
     }
-    else {
-        fread(s_principal, sizeof(t_principal), 1, ficheiro);
-    }
-    fflush(ficheiro);
-    fclose(ficheiro);
+    fflush(ficheiro);                                           // limpa o buffer do ficheiro
+    fclose(ficheiro);                                           // fecha o ficheiro
 }
 void gravar_no_ficheiro(t_principal* s_principal) {  // 5 linhas
-    FILE* ficheiro;
-    ficheiro = fopen("BaseDados.bin", "wb");
-    fwrite(s_principal, sizeof(t_principal), 1, ficheiro);
-    fflush(ficheiro);
-    fclose(ficheiro);
+    FILE* ficheiro;                                         // cria uma variavel do tipo FILE que armazena o ficheiro
+    ficheiro = fopen("BaseDados.bin", "wb");                // abre o ficheiro no modo WRITEONLY em binário
+    fwrite(s_principal, sizeof(t_principal), 1, ficheiro);  // escreve a informação da base de dados na memoria para o ficheiro
+    fflush(ficheiro);                                       // limpa o buffer do ficheiro
+    fclose(ficheiro);                                       // fecha o ficheiro
 }
+//***********************
+//*    FIM FICHEIRO     *
+//***********************
+
+
+//****************
+//*    MENUS     *
+//****************
+void menu_principal(t_principal* s_principal) { // 25 linhas
+    system("cls");
+    int opcao = 0, index; float total_faturado; char espacos[100]; t_data dataInicial = {0, 0, 0}, dataFinal = {0, 0, 0};
+
+    // escreve as estatisticas de cada escola
+    printf(" #  | ID Escola | Nome Escola                                       | Total faturado |\n");
+    printf("--------------------------------------------------------------------------------------\n");
+    for(index = 0; index < MAX_ESCOLA; index++){                     
+        if(s_principal->v_escola[index].id_escola != 0){
+            total_faturado = calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 2, dataInicial, dataFinal, "\0");
+            calcula_numero_de_espacos(espacos, 5, conta_caracteres_numero(index));
+            printf(" %d%s", index, espacos);
+            calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(s_principal->v_escola[index].id_escola));
+            printf("%d%s", s_principal->v_escola[index].id_escola, espacos);
+            calcula_numero_de_espacos(espacos, 52, strlen(s_principal->v_escola[index].nome_escola));
+            printf("%s%s", s_principal->v_escola[index].nome_escola, espacos);
+            printf("%.2f\n", total_faturado);
+        }
+    }
+
+    // mostra o menu e as suas opções e obtem o input do utilizador
+    opcao = obter_input(0, 4, "\n\nMenu Principal\n\n", "1 - Registar informacao\n", "2 - Consultar informacao\n", "3 - Estatisticas\n", "4 - Gravar no ficheiro\n", "0 - Sair da aplicacao");
+    switch (opcao) {
+        case 1: menu_registar(s_principal, selecinar_base_dados()); break;           // para registar informacao
+        case 2: menu_consultar(s_principal, selecinar_base_dados()); break;          // para consultar informacao
+        case 3: menu_estatisticas(s_principal, dataInicial, dataFinal, "\0"); break; // para consultar estatisticas
+        case 4: gravar_no_ficheiro(s_principal); menu_principal(s_principal); break; // para gravar a base de dados da memoria no ficheiro
+        case 0: menu_sair(s_principal); break;                                       // para sair da aplicação
+        default: menu_principal(s_principal); break;
+    }
+}
+void menu_registar(t_principal* s_principal, int baseDados) {     // 22 linhas
+    system("cls");
+    int opcao = 0, index = procurar_elemento_vazio(s_principal, baseDados);
+
+    // para definir o titulo da base de dados que está a inserir
+    char titulo[13];
+    switch(baseDados){
+        case ESCOLA: strcpy(titulo, "Escolas"); break;
+        case UTILIZADOR: strcpy(titulo, "Utilizadores"); break;
+        case TRANSACAO: strcpy(titulo, "Transacoes"); break;
+    }
+    
+    // Apresenta o menu registar
+    printf("Menu Registar - %s\n", titulo);
+    printf("-----------------------------------------\n");
+    if(baseDados == ESCOLA || baseDados == UTILIZADOR || baseDados == TRANSACAO){// caso a base de dados inserida no parametro seja valida
+        registar_informacao(s_principal, index, baseDados);    // pede input para registar a informação na base de dados enviada por parametro
+        printf("\n");
+        // mostra a informação inserida pelo utilizador e pede a confirmação se quer inserir mais elementos
+        cabecalho_apresentar_dados(baseDados);
+        apresentar_dados(s_principal, index, baseDados);
+        opcao = obter_input(1, 3, "\nDeseja introduzir mais elementos?", "\n1 - Sim", "\n2 - Nao", "\n3 - Mudar base de dados", "\0", "\0");
+        switch (opcao){
+            case 1: menu_registar(s_principal, baseDados); break;
+            case 2: menu_principal(s_principal); break;
+            case 3: menu_registar(s_principal, selecinar_base_dados()); break;
+        }
+    } else { menu_principal(s_principal); }
+}
+void menu_consultar(t_principal* s_principal, int baseDados) { // 21 linhas
+    system("cls");
+    int opcao = 0, max_elementos = 0;
+
+    // para definir o titulo da base de dados que está a inserir
+    char titulo[13];
+    switch(baseDados){
+        case ESCOLA: strcpy(titulo, "Escolas"); max_elementos = MAX_ESCOLA; break;
+        case UTILIZADOR: strcpy(titulo, "Utilizadores"); max_elementos = MAX_UTILIZADOR; break;
+        case TRANSACAO: strcpy(titulo, "Transacoes"); max_elementos = MAX_TRANSACAO; break;
+    }
+    printf("Menu Consultar - %s\n\n", titulo);
+    if(baseDados == ESCOLA || baseDados == UTILIZADOR || baseDados == TRANSACAO){ // caso a base de dados inserida no parametro seja valida
+        cabecalho_apresentar_dados(baseDados);
+        consultar_informacao(s_principal, baseDados); // apresenta a todos os elementos da respetiva base de dados
+
+        // ofecere varias opções ao utilizador e espera pelo seu input
+        opcao = obter_input(0, 4, "\n1 - Apagar elemento", "\n2 - Alterar elemento", "\n3 - Mudar base de dados", "\n4 - Limpar base de dados", "\n0 - Voltar Atras", "\0");
+        switch (opcao){
+            case 1: apagar_elemento(s_principal, receber_index(), baseDados); break;
+            case 2: alterar_elemento(s_principal, receber_index(), baseDados); break;
+            case 3: menu_consultar(s_principal, selecinar_base_dados()); break;
+            case 4: limpa_array(s_principal, baseDados);  menu_consultar(s_principal, baseDados);break;
+            case 0: menu_principal(s_principal); break;
+        }
+    } else { menu_principal(s_principal); }
+}
+void apresentar_dados(t_principal* s_principal, int index, int baseDados){ // 12 linhas
+    char espacos[100];
+    switch(baseDados){
+        case ESCOLA: ;
+            apresentar_escolas(s_principal, index, baseDados);
+            break;
+        case UTILIZADOR: ;
+            apresentar_utilizadores(s_principal, index, baseDados);
+            break;
+        case TRANSACAO: ;
+            apresentar_transacoes(s_principal, index,  baseDados);
+            break;
+    }
+}
+void apresentar_escolas(t_principal* s_principal, int index, int baseDados){ // 13 linhas
+    char espacos[100];
+    t_escola v_aux_escola = s_principal->v_escola[index];
+    calcula_numero_de_espacos(espacos, 5, conta_caracteres_numero(index));
+    printf(" %d%s", index, espacos);
+    calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(v_aux_escola.id_escola));
+    printf("%d%s", v_aux_escola.id_escola, espacos);
+    calcula_numero_de_espacos(espacos, 52, strlen(v_aux_escola.nome_escola));
+    printf("%s%s", v_aux_escola.nome_escola, espacos);
+    calcula_numero_de_espacos(espacos, 15, strlen(v_aux_escola.abreviatura));
+    printf("%s%s", v_aux_escola.abreviatura, espacos);
+    calcula_numero_de_espacos(espacos, 13, strlen(v_aux_escola.campus));
+    printf("%s%s", v_aux_escola.campus, espacos);
+    printf("%s\n", v_aux_escola.localizacao);
+}
+void apresentar_utilizadores(t_principal* s_principal, int index, int baseDados){ // 17 linhas
+    char espacos[100];
+    t_utilizador v_aux_utilizador = s_principal->v_utilizador[index];
+    calcula_numero_de_espacos(espacos, 4, conta_caracteres_numero(index));
+    printf(" %d%s", index, espacos);
+    calcula_numero_de_espacos(espacos, 16, conta_caracteres_numero(v_aux_utilizador.id_utilizador));
+    printf("%d%s", v_aux_utilizador.id_utilizador, espacos);
+    calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(v_aux_utilizador.id_escola));
+    printf("%d%s", v_aux_utilizador.id_escola, espacos);
+    calcula_numero_de_espacos(espacos, 22, strlen(v_aux_utilizador.nome_utilizador));
+    printf("%s%s", v_aux_utilizador.nome_utilizador, espacos);
+    calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(v_aux_utilizador.NIF));
+    printf("%d%s", v_aux_utilizador.NIF, espacos);
+    calcula_numero_de_espacos(espacos, 18, strlen(v_aux_utilizador.tipo_utilizador));
+    printf("%s%s", v_aux_utilizador.tipo_utilizador, espacos);
+    calcula_numero_de_espacos(espacos, 24, strlen(v_aux_utilizador.email));
+    printf("%s%s", v_aux_utilizador.email, espacos);
+    printf("%.2f\n", v_aux_utilizador.saldo);    
+}
+void apresentar_transacoes(t_principal* s_principal, int index, int baseDados){ // 17 linhas
+    char espacos[100];
+    t_transacao v_aux_transacao = s_principal->v_transacao[index];
+    calcula_numero_de_espacos(espacos, 6, conta_caracteres_numero(index));
+    printf(" %d%s", index, espacos);
+    calcula_numero_de_espacos(espacos, 17, conta_caracteres_numero(v_aux_transacao.id_transacao));
+    printf("%d%s", v_aux_transacao.id_transacao, espacos);
+    calcula_numero_de_espacos(espacos, 19, conta_caracteres_numero(v_aux_transacao.id_utilizador));
+    printf("%d%s", v_aux_transacao.id_utilizador, espacos);
+    calcula_numero_de_espacos(espacos, 19, strlen(v_aux_transacao.tipo_transacao));
+    printf("%s%s", v_aux_transacao.tipo_transacao, espacos);
+    calcula_numero_de_espacos(espacos, 21, conta_caracteres_numero(v_aux_transacao.valor) + 3);
+    printf("%.2f%s", v_aux_transacao.valor, espacos);
+    calcula_numero_de_espacos(espacos, 15, conta_caracteres_numero(v_aux_transacao.data.dia) + conta_caracteres_numero(v_aux_transacao.data.mes) + conta_caracteres_numero(v_aux_transacao.data.ano) + 2);
+    printf("%02d/%02d/%04d%s", v_aux_transacao.data.dia, v_aux_transacao.data.mes, v_aux_transacao.data.ano, espacos);
+    printf("%02d:%02d:%02d\n", v_aux_transacao.hora.hora, v_aux_transacao.hora.minuto, v_aux_transacao.hora.segundo);  
+}
+void cabecalho_apresentar_dados(int baseDados){ // 14 linhas
+    // apresenta diferentes cabeçalhos dependendo da base de dados inserida
+    switch(baseDados){
+        case ESCOLA:
+            printf(" #  | ID Escola | Nome Escola                                       | Abreviatura |  Campus   |   Localizacao         |\n");
+            printf("-----------------------------------------------------------------------------------------------------------------------\n");
+            break;
+        case UTILIZADOR:
+            printf(" # | ID Utilizador | ID Escola | Nome Utilizador     | NIF       | Tipo Utilizador | E-Mail                | Saldo    |\n");
+            printf("-----------------------------------------------------------------------------------------------------------------------\n");
+            break;
+        case TRANSACAO:
+            printf(" #  |  ID Transacao  |  ID Utilizador   |  Tipo Transacao  |  Valor Transacao  |   Data        |   Hora       |\n");
+            printf("----------------------------------------------------------------------------------------------------------------------\n");
+            break;
+    }
+}
+void menu_estatisticas(t_principal* s_principal, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]){ // 23 linhas
+    system("cls");
+    float total_faturado = 0;
+    int index = 0, opcao = 0;
+    char espacos[100];
+    // apresenta o menu
+    printf("Visualizar Estatisticas\n\n");
+    if(dataInicial.dia != 0){ printf("Data Inicial: %d/%d/%d\n", dataInicial.dia, dataInicial.mes, dataInicial.ano); } // apresenta a data inicial do filtro (caso seja 0 nao apresenta)
+    else { printf("Data Inicial: \n"); }
+    if(dataFinal.dia != 0){ printf("Data Final: %d/%d/%d\n", dataFinal.dia, dataFinal.mes, dataFinal.ano); } // apresenta a data inicial do filtro (caso seja 0 nao apresenta)
+    else { printf("Data Final: \n"); }
+
+    // apresenta o menu das estatisticas
+    printf("Tipo de utilizador: %s\n\n", tipoUtilizador);
+    printf(" #  | ID Escola | Nome Escola                                       | Total faturado |  N%c pagamentos  |  %% pagamentos |\n", 248);
+    printf("------------------------------------------------------------------------------------------------------------------------\n");
+    // apresenta todas as escolas
+    for(index = 0; index < MAX_ESCOLA; index++){
+        if(s_principal->v_escola[index].id_escola != 0){
+            escrever_elemento_tabela_estatisticas(s_principal, dataInicial, dataFinal, tipoUtilizador, index);
+        }
+    }
+    // obtem input do utilizador
+    opcao = obter_input(0, 1, "\n\n\n1 - Filtros","\n0 - Voltar atras", "\0", "\0", "\0", "\0");
+    switch(opcao){
+        case 1: escrever_filtos(s_principal); break;
+        case 0: menu_principal(s_principal); break;
+        default: menu_principal(s_principal);
+    }
+}
+void escrever_elemento_tabela_estatisticas(t_principal * s_principal, t_data dataInicial, t_data dataFinal, char tipoUtilizador[], int index){ // 17 linhas
+    // apresenta todas as informações de cada escola
+    float total_faturado = 0;
+    char espacos[100];
+    int total_transacoes_percentagem = 0, total_transacoes = 0;
+    total_faturado = calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 2, dataInicial, dataFinal, tipoUtilizador);
+    total_transacoes_percentagem = (int)calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 0, dataInicial, dataFinal, tipoUtilizador);
+    total_transacoes = (int)calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 1, dataInicial, dataFinal, tipoUtilizador);
+    calcula_numero_de_espacos(espacos, 5, conta_caracteres_numero(index));
+    printf(" %d%s", index, espacos);
+    calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(s_principal->v_escola[index].id_escola));
+    printf("%d%s", s_principal->v_escola[index].id_escola, espacos);
+    calcula_numero_de_espacos(espacos, 52, strlen(s_principal->v_escola[index].nome_escola));
+    printf("%s%s", s_principal->v_escola[index].nome_escola, espacos);
+    calcula_numero_de_espacos(espacos, 18, conta_caracteres_numero(total_faturado) + 3);
+    printf("%.2f%s", total_faturado, espacos);
+    calcula_numero_de_espacos(espacos, 19, conta_caracteres_numero(total_transacoes));
+    printf("%d%s", total_transacoes, espacos);
+    printf("%d%%\n", total_transacoes_percentagem);
+}
+void limite_base_dados(t_principal* s_principal, int baseDados){ // 7 linhas
+    // apresenta um menu a dizer que a base de dados chegou ao limite
+    int opcao = 0;
+    opcao = obter_input(0, 2, "A base de dados atingiu o limite!!!\n\n", "1 - Apagar elementos\n", "2 - Editar elementos\n", "0 - Voltar atras", "\0", "\0");
+    switch(opcao){
+        case 1: apagar_elemento(s_principal, receber_index(), baseDados); break;
+        case 2: alterar_elemento(s_principal, receber_index(), baseDados); break;
+        case 0: menu_principal(s_principal); break;
+    }
+}
+void menu_sair(t_principal* s_principal) { // 16 linhas
+    // menu para sair da aplicação
+    int opcao = 0;
+    system("cls");
+    opcao = obter_input(0, 2, "Sair da aplicacao\n\n", "Deseja guardar a informacao registada?\n", "1 - Guardar\n", "2 - Nao guardar\n", "0 - Voltar atras", "\0");
+    switch(opcao){
+        case 1:                                                 // caso queira guardar a informação
+            gravar_no_ficheiro(s_principal);
+            system("cls");
+            printf("Sair da Aplicacao\n\n");
+            printf("Informacao guardada com sucesso!\n");
+            printf("\n\nPrima qualquer tecla para sair da aplicacao");
+            getchar();
+            exit(1);
+            break;
+        case 2: exit(1); break;                                // caso nao queira guardar informação
+        case 0: menu_principal(s_principal);                   // caso queira voltar atras
+        default: menu_sair(s_principal);
+    }
+}
+//****************
+//*   FIMMENUS   *
+//****************
+
+
+//******************************
+//*   MANIPULAÇÃO BASE DADOS   *
+//******************************
 void limpa_array(t_principal* s_principal, int baseDados) { // 25 linhas
     int index = 0;
+    // vai por um ciclo que apaga a base de dados introduzida por parametro
     switch(baseDados){
         case ESCOLA:
             for (index = 0; index < MAX_ESCOLA; index++) {
@@ -152,9 +453,9 @@ void limpa_array(t_principal* s_principal, int baseDados) { // 25 linhas
             for (index = 0; index < MAX_TRANSACAO; index++) {
                 limpa_elemento(s_principal, index, TRANSACAO);
             }break;
-        default:
+        default:  // caso nao se introduza nenhuma base de dados valida, apaga todas as bases de dados
             for (index = 0; index < MAX_ESCOLA; index++) {
-                    limpa_elemento(s_principal, index, ESCOLA);
+                limpa_elemento(s_principal, index, ESCOLA);
             }
             for (index = 0; index < MAX_UTILIZADOR; index++) {
                 limpa_elemento(s_principal, index, UTILIZADOR);
@@ -165,6 +466,7 @@ void limpa_array(t_principal* s_principal, int baseDados) { // 25 linhas
     }
 }
 void limpa_elemento(t_principal* s_principal, int index, int baseDados) { // 25 linhas
+    // apaga o elemento inserido por parametro (depende de index e base de dados)
     switch(baseDados){
         case ESCOLA:
             s_principal->v_escola[index].id_escola = 0;
@@ -191,61 +493,19 @@ void limpa_elemento(t_principal* s_principal, int index, int baseDados) { // 25 
             s_principal->v_transacao[index].hora = (t_hora){ 0, 0, 0 };
     }
 }
-
-int selecinar_base_dados() { // 7 linhas
-    int opcao;
-    do {
-        system("cls");
-        opcao = obter_input(0, 3, "Selecione a base de dados que deseja manipular:\n\n", "1 - Escolas\n", "2 - Utilizadores\n", "3 - Transacoes\n", "0 - Voltar atras", "\0");
-
-    } while (opcao < 0 && opcao > 3);
-    return opcao;
-}
-int procurar_elemento_vazio(t_principal* s_principal, int baseDados) { // 22 linhas
-    int index = 0;
-    switch (baseDados) {
-        case ESCOLA:
-            for (index = 0; index < MAX_ESCOLA; index++) {
-                if (s_principal->v_escola[index].id_escola == 0) {
-                    return index;
-                }
-            }break;
-        case UTILIZADOR:
-            for (index = 0; index < MAX_UTILIZADOR; index++) {
-                if (s_principal->v_utilizador[index].id_utilizador == 0) {
-                    return index;
-                }
-            }break;
-        case TRANSACAO:
-            for (int index = 0; index < MAX_TRANSACAO; index++) {
-                if (s_principal->v_transacao[index].id_transacao == 0) {
-                    return index;
-                }
-            }break;
-    }
-    return BASE_DADOS_CHEIA;
-}
-void limite_base_dados(t_principal* s_principal, int baseDados){ // 7 linhas
-    int opcao = 0;
-    opcao = obter_input(0, 2, "A base de dados atingiu o limite!!!\n\n", "1 - Apagar elementos\n", "2 - Editar elementos\n", "0 - Voltar atras", "\0", "\0");
-    switch(opcao){
-        case 1: apagar_elemento(s_principal, receber_index(), baseDados); break;
-        case 2: alterar_elemento(s_principal, receber_index(), baseDados); break;
-        case 0: menu_principal(s_principal); break;
-    }
-}
 void registar_informacao(t_principal* s_principal, int index, int baseDados) { // 9 linhas
-    if(index != BASE_DADOS_CHEIA){
+    if(index != BASE_DADOS_CHEIA){ // caso a base de dados nao esteja cheia
         switch (baseDados) {
-            case ESCOLA: registar_escola(s_principal, index); break;
-            case UTILIZADOR: registar_utilizador(s_principal, index); break;
-            case TRANSACAO: registar_transacao(s_principal, index); break;
+            case ESCOLA: registar_escola(s_principal, index); break;            // insere escolas
+            case UTILIZADOR: registar_utilizador(s_principal, index); break;    // insere utilizadores
+            case TRANSACAO: registar_transacao(s_principal, index); break;      // insere transacoes
         }
-    } else {
-        limite_base_dados(s_principal, baseDados);
+    } else { // caso a base de dados esteja cheia
+        limite_base_dados(s_principal, baseDados);  // chama o menu que diz que a base de dados está cheia
     }
 }
 void registar_escola(t_principal* s_principal, int index) { // 19 linhas
+    // obtem o input do utilizador, valida-o e caso esteja tudo valido, insere na base de dados na memoria
     t_escola v_aux_escola[MAX_ESCOLA];
     printf("Identificador Escola: ");
     obter_identificador(s_principal, &v_aux_escola[index].id_escola, ESCOLA, 0);
@@ -267,6 +527,7 @@ void registar_escola(t_principal* s_principal, int index) { // 19 linhas
     strcpy(s_principal->v_escola[index].localizacao, v_aux_escola[index].localizacao);
 }
 void registar_utilizador(t_principal* s_principal, int index) { // 25 linhas
+    // obtem o input do utilizador, valida-o e caso esteja tudo valido, insere na base de dados na memoria
     t_utilizador v_aux_utilizador[MAX_UTILIZADOR];
     fflush(stdin);
     printf("Identificador Utilizador: ");
@@ -294,6 +555,7 @@ void registar_utilizador(t_principal* s_principal, int index) { // 25 linhas
     s_principal->v_utilizador[index].saldo = v_aux_utilizador[index].saldo;
 }
 void registar_transacao(t_principal* s_principal, int index) { // 21 linhas
+    // obtem o input do utilizador, valida-o e caso esteja tudo valido, insere na base de dados na memoria
     int validacao_transacoes[6];
     t_transacao v_aux_transacao[MAX_TRANSACAO];
     fflush(stdin);
@@ -316,10 +578,11 @@ void registar_transacao(t_principal* s_principal, int index) { // 21 linhas
     s_principal->v_transacao[index].data = (t_data){ v_aux_transacao[index].data.dia, v_aux_transacao[index].data.mes, v_aux_transacao[index].data.ano };
     s_principal->v_transacao[index].hora = (t_hora){ v_aux_transacao[index].hora.hora, v_aux_transacao[index].hora.minuto, v_aux_transacao[index].hora.segundo };
 }
-
 void consultar_informacao(t_principal* s_principal, int baseDados) { // 24 linhas
     int index = 0;
+    // verifica qual a base de dados inserida por parametro
     switch (baseDados) {
+        // cria um ciclo que apresenta todos os elementos que NAO estejam vazios
         case ESCOLA:
             for(index = 0; index < MAX_ESCOLA; index++){
                 if(s_principal->v_escola[index].id_escola != 0){
@@ -343,117 +606,84 @@ void consultar_informacao(t_principal* s_principal, int baseDados) { // 24 linha
             break;
     }
 }
-int conta_caracteres_numero(int numero){ // 6 linhas
-    int count = 1;
-    while (numero > 9) {
-        numero = numero / 10;
-        count++;
-    }
-    return count;
-}
-void calcula_numero_de_espacos(char espacos[], int numero_espacos_normalmente, int tamanho_palavra){  // 8 linhas
-    int index = 0;
-    char auxiliar[100];
-    for(index = 0; index < 100; index++){
-        espacos[index] = '\0';
-    }
-    for(index = 0; index < numero_espacos_normalmente - tamanho_palavra; index++){
-        espacos[index] = ' ';
-    }
-}
-void cabecalho_apresentar_dados(int baseDados){ // 14 linhas
-    switch(baseDados){
-        case ESCOLA:
-            printf(" #  | ID Escola | Nome Escola                                       | Abreviatura |  Campus   |   Localizacao         |\n");
-            printf("-----------------------------------------------------------------------------------------------------------------------\n");
-            break;
-        case UTILIZADOR:
-            printf(" # | ID Utilizador | ID Escola | Nome Utilizador     | NIF       | Tipo Utilizador | E-Mail                | Saldo    |\n");
-            printf("-----------------------------------------------------------------------------------------------------------------------\n");
-            break;
-        case TRANSACAO:
-            printf(" #  |  ID Transacao  |  ID Utilizador   |  Tipo Transacao  |  Valor Transacao  |   Data        |   Hora       |\n");
-            printf("----------------------------------------------------------------------------------------------------------------------\n");
-            break;
-    }
-}
-void apresentar_dados(t_principal* s_principal, int index, int baseDados){
-    char espacos[100];
-    switch(baseDados){
-        case ESCOLA: ;
-            t_escola v_aux_escola = s_principal->v_escola[index];
-            calcula_numero_de_espacos(espacos, 5, conta_caracteres_numero(index));
-            printf(" %d%s", index, espacos);
-            calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(v_aux_escola.id_escola));
-            printf("%d%s", v_aux_escola.id_escola, espacos);
-            calcula_numero_de_espacos(espacos, 52, strlen(v_aux_escola.nome_escola));
-            printf("%s%s", v_aux_escola.nome_escola, espacos);
-            calcula_numero_de_espacos(espacos, 15, strlen(v_aux_escola.abreviatura));
-            printf("%s%s", v_aux_escola.abreviatura, espacos);
-            calcula_numero_de_espacos(espacos, 13, strlen(v_aux_escola.campus));
-            printf("%s%s", v_aux_escola.campus, espacos);
-            printf("%s\n", v_aux_escola.localizacao);  break;
-        case UTILIZADOR: ;
-            t_utilizador v_aux_utilizador = s_principal->v_utilizador[index];
-            calcula_numero_de_espacos(espacos, 4, conta_caracteres_numero(index));
-            printf(" %d%s", index, espacos);
-            calcula_numero_de_espacos(espacos, 16, conta_caracteres_numero(v_aux_utilizador.id_utilizador));
-            printf("%d%s", v_aux_utilizador.id_utilizador, espacos);
-            calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(v_aux_utilizador.id_escola));
-            printf("%d%s", v_aux_utilizador.id_escola, espacos);
-            calcula_numero_de_espacos(espacos, 22, strlen(v_aux_utilizador.nome_utilizador));
-            printf("%s%s", v_aux_utilizador.nome_utilizador, espacos);
-            calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(v_aux_utilizador.NIF));
-            printf("%d%s", v_aux_utilizador.NIF, espacos);
-            calcula_numero_de_espacos(espacos, 18, strlen(v_aux_utilizador.tipo_utilizador));
-            printf("%s%s", v_aux_utilizador.tipo_utilizador, espacos);
-            calcula_numero_de_espacos(espacos, 24, strlen(v_aux_utilizador.email));
-            printf("%s%s", v_aux_utilizador.email, espacos);
-            printf("%.2f\n", v_aux_utilizador.saldo); break;
-        case TRANSACAO: ;
-            t_transacao v_aux_transacao = s_principal->v_transacao[index];
-            calcula_numero_de_espacos(espacos, 6, conta_caracteres_numero(index));
-            printf(" %d%s", index, espacos);
-            calcula_numero_de_espacos(espacos, 17, conta_caracteres_numero(v_aux_transacao.id_transacao));
-            printf("%d%s", v_aux_transacao.id_transacao, espacos);
-            calcula_numero_de_espacos(espacos, 19, conta_caracteres_numero(v_aux_transacao.id_utilizador));
-            printf("%d%s", v_aux_transacao.id_utilizador, espacos);
-            calcula_numero_de_espacos(espacos, 19, strlen(v_aux_transacao.tipo_transacao));
-            printf("%s%s", v_aux_transacao.tipo_transacao, espacos);
-            calcula_numero_de_espacos(espacos, 21, conta_caracteres_numero(v_aux_transacao.valor) + 3);
-            printf("%.2f%s", v_aux_transacao.valor, espacos);
-            calcula_numero_de_espacos(espacos, 15, conta_caracteres_numero(v_aux_transacao.data.dia) + conta_caracteres_numero(v_aux_transacao.data.mes) + conta_caracteres_numero(v_aux_transacao.data.ano) + 2);
-            printf("%02d/%02d/%04d%s", v_aux_transacao.data.dia, v_aux_transacao.data.mes, v_aux_transacao.data.ano, espacos);
-            printf("%02d:%02d:%02d\n", v_aux_transacao.hora.hora, v_aux_transacao.hora.minuto, v_aux_transacao.hora.segundo);  break;
-    }
-}
-
-void menu_principal(t_principal* s_principal) { // 25 linhas
+void apagar_elemento(t_principal* s_principal, int index, int baseDados){ // 25 linhas
     system("cls");
-    int opcao = 0, index; float total_faturado; char espacos[100]; t_data dataInicial = {0, 0, 0}, dataFinal = {0, 0, 0};
-    printf(" #  | ID Escola | Nome Escola                                       | Total faturado |\n");
-    printf("--------------------------------------------------------------------------------------\n");
-    for(index = 0; index < MAX_ESCOLA; index++){
-        if(s_principal->v_escola[index].id_escola != 0){
-            total_faturado = calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 2, dataInicial, dataFinal, "\0");
-            calcula_numero_de_espacos(espacos, 5, conta_caracteres_numero(index));
-            printf(" %d%s", index, espacos);
-            calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(s_principal->v_escola[index].id_escola));
-            printf("%d%s", s_principal->v_escola[index].id_escola, espacos);
-            calcula_numero_de_espacos(espacos, 52, strlen(s_principal->v_escola[index].nome_escola));
-            printf("%s%s", s_principal->v_escola[index].nome_escola, espacos);
-            printf("%.2f\n", total_faturado);
+    if(verificar_se_existe(s_principal, index, baseDados) == 1){ // caso o elemento exista
+        printf("Tem a certeza que quer apagar este elemento?\n\n\n");
+        cabecalho_apresentar_dados(baseDados);
+        apresentar_dados(s_principal, index, baseDados);
+        int opcao = obter_input(0, 3, "\n\n1 - Sim", "\n2 - Nao", "\n3 - Escolher outro elemento", "\n0 - Voltar atras", "\0", "\0");
+        switch(opcao){
+            case 1:  // Sim
+                limpa_elemento(s_principal, index, baseDados);
+                menu_consultar(s_principal, baseDados);
+                break;
+            case 2: menu_consultar(s_principal, baseDados); // Nao
+                break;
+            case 3: apagar_elemento(s_principal, receber_index(), baseDados); break; // Escolher outro elemento
+                break;
+            case 0: menu_principal(s_principal); break;// Voltar atras
+        }
+    } else{             // caso o elemento nao exista
+        printf("\nO elemento com index %d nao existe na nossa base de dados!\n", index);
+        int opcao_1 = obter_input(0, 2, "1 - Registar elemento\n", "2 - Escolher outro elemento\n", "0 - Voltar atras\n", "\0", "\0", "\0");
+        switch(opcao_1){
+            case 1: menu_registar(s_principal, baseDados); break;
+            case 2: alterar_elemento(s_principal, receber_index(), baseDados);
+            case 0: menu_consultar(s_principal, baseDados); break;
         }
     }
-    opcao = obter_input(0, 4, "\n\nMenu Principal\n\n", "1 - Registar informacao\n", "2 - Consultar informacao\n", "3 - Estatisticas\n", "4 - Gravar no ficheiro\n", "0 - Sair da aplicacao");
-    switch (opcao) {
-        case 1: menu_registar(s_principal, selecinar_base_dados()); break;
-        case 2: menu_consultar(s_principal, selecinar_base_dados()); break;
-        case 3: menu_estatisticas(s_principal, dataInicial, dataFinal, "\0"); break;
-        case 4: gravar_no_ficheiro(s_principal); menu_principal(s_principal); break;
-        case 0: menu_sair(s_principal); break;
-        default: menu_principal(s_principal); break;
+}
+void alterar_elemento(t_principal* s_principal, int index, int baseDados) { // 24 linhas
+    system("cls");
+    if(verificar_se_existe(s_principal, index, baseDados) == 1){  // caso o elemento exista
+        printf("\n\nPretende alterar este elemento?\n\n");
+        cabecalho_apresentar_dados(baseDados);
+        apresentar_dados(s_principal, index, baseDados);
+        int opcao = obter_input(0, 3, "\n\n1 - Sim", "\n2 - Nao", "\n3 - Escolher outro elemento", "\n0 - Voltar atras", "\0", "\0");
+        switch(opcao){
+            case 1:  // Sim
+                registar_informacao(s_principal, index, baseDados);
+                menu_consultar(s_principal, baseDados);
+                break;
+            case 2: menu_consultar(s_principal, baseDados); break;// Nao
+            case 3: apagar_elemento(s_principal, receber_index(), baseDados); break; // Escolher outro elemento
+            case 0: menu_principal(s_principal); break;// Voltar atras
+        }
+    } else{                                                     // caso e elemento nao exista
+        printf("\nO elemento com index %d nao existe na nossa base de dados!\n", index);
+        int opcao_1 = obter_input(0, 2, "1 - Registar elemento\n", "2 - Escolher outro elemento\n", "0 - Voltar atras", "\0", "\0", "\0");
+        switch(opcao_1){
+            case 1: menu_registar(s_principal, baseDados); break;
+            case 2: alterar_elemento(s_principal, receber_index(), baseDados);
+            case 0: menu_consultar(s_principal, baseDados); break;
+        }
     }
+}
+//**********************************
+//*   FIM MANIPULAÇÃO BASE DADOS   *
+//**********************************
+
+
+//*************
+//*   INPUT   *
+//*************
+int selecinar_base_dados() { // 7 linhas
+    int opcao;
+    // obtem uma base de dados           Escolas || Utilizadores || Transações 
+    do {
+        system("cls");
+        opcao = obter_input(0, 3, "Selecione a base de dados que deseja manipular:\n\n", "1 - Escolas\n", "2 - Utilizadores\n", "3 - Transacoes\n", "0 - Voltar atras", "\0");
+
+    } while (opcao < 0 && opcao > 3);
+    return opcao;
+}
+int receber_index(){ // 5 linhas
+    int index = 0;
+    // obtem um index
+    printf("\n\n    INDEX (#)  --->   ");
+    scanf("%d", &index);
+    return index;
 }
 int obter_input(int minimo, int maximo, char texto1[], char texto2[], char texto3[], char texto4[], char texto5[], char texto6[]){ // 24 linhas
     char textos[6][100];          // criação de array para facilitar o uso de ciclos
@@ -481,206 +711,21 @@ int obter_input(int minimo, int maximo, char texto1[], char texto2[], char texto
     } while(opcao < minimo || opcao > maximo);                  // valores que devem ser introduzidos pelo utilizador
     return opcao;                                               // devolve a opcao escolhida
 }
-void menu_registar(t_principal* s_principal, int baseDados) {     // 22 linhas
-    int opcao = 0, index = procurar_elemento_vazio(s_principal, baseDados);
-    char titulo[13];
-    switch(baseDados){
-        case ESCOLA: strcpy(titulo, "Escolas"); break;
-        case UTILIZADOR: strcpy(titulo, "Utilizadores"); break;
-        case TRANSACAO: strcpy(titulo, "Transacoes"); break;
-    }
-    system("cls");
-    printf("Menu Registar - %s\n", titulo);
-    printf("-----------------------------------------\n");
-    if(baseDados == ESCOLA || baseDados == UTILIZADOR || baseDados == TRANSACAO){
-        registar_informacao(s_principal, index, baseDados);
-        printf("\n");
-        cabecalho_apresentar_dados(baseDados);
-        apresentar_dados(s_principal, index, baseDados);
-        opcao = obter_input(1, 3, "\nDeseja introduzir mais elementos?", "\n1 - Sim", "\n2 - Nao", "\n3 - Mudar base de dados", "\0", "\0");
-        switch (opcao){
-            case 1: menu_registar(s_principal, baseDados); break;
-            case 2: menu_principal(s_principal); break;
-            case 3: menu_registar(s_principal, selecinar_base_dados()); break;
-        }
-    } else { menu_principal(s_principal); }
-}
-void menu_consultar(t_principal* s_principal, int baseDados) { // 21 linhas
-    int opcao = 0, max_elementos = 0;
-    char titulo[13];
-    switch(baseDados){
-        case ESCOLA: strcpy(titulo, "Escolas"); max_elementos = MAX_ESCOLA; break;
-        case UTILIZADOR: strcpy(titulo, "Utilizadores"); max_elementos = MAX_UTILIZADOR; break;
-        case TRANSACAO: strcpy(titulo, "Transacoes"); max_elementos = MAX_TRANSACAO; break;
-    }
-    system("cls");
-    printf("Menu Consultar - %s\n\n", titulo);
-    if(baseDados == ESCOLA || baseDados == UTILIZADOR || baseDados == TRANSACAO){
-        cabecalho_apresentar_dados(baseDados);
-        consultar_informacao(s_principal, baseDados);
-        opcao = obter_input(0, 4, "\n1 - Apagar elemento", "\n2 - Alterar elemento", "\n3 - Mudar base de dados", "\n4 - Limpar base de dados", "\n0 - Voltar Atras", "\0");
-        switch (opcao){
-            case 1: apagar_elemento(s_principal, receber_index(), baseDados); break;
-            case 2: alterar_elemento(s_principal, receber_index(), baseDados); break;
-            case 3: menu_consultar(s_principal, selecinar_base_dados()); break;
-            case 4: limpa_array(s_principal, baseDados);  menu_consultar(s_principal, baseDados);break;
-            case 0: menu_principal(s_principal); break;
-        }
-    } else { menu_principal(s_principal); }
-}
-int receber_index(){ // 5 linhas
-    int index = 0;
-    printf("\n\n    INDEX (#)  --->   ");
-    scanf("%d", &index);
-    return index;
-}
-void apagar_elemento(t_principal* s_principal, int index, int baseDados){ // 25 linhas
-    system("cls");
-    if(verificar_se_existe(s_principal, index, baseDados) == 1){
-        printf("Tem a certeza que quer apagar este elemento?\n\n\n");
-        cabecalho_apresentar_dados(baseDados);
-        apresentar_dados(s_principal, index, baseDados);
-        int opcao = obter_input(0, 3, "\n\n1 - Sim", "\n2 - Nao", "\n3 - Escolher outro elemento", "\n0 - Voltar atras", "\0", "\0");
-        switch(opcao){
-            case 1:  // Sim
-                limpa_elemento(s_principal, index, baseDados);
-                menu_consultar(s_principal, baseDados);
-                break;
-            case 2: menu_consultar(s_principal, baseDados); // Nao
-                break;
-            case 3: apagar_elemento(s_principal, receber_index(), baseDados); break; // Escolher outro elemento
-                break;
-            case 0: menu_principal(s_principal); break;// Voltar atras
-        }
-    } else{
-        printf("\nO elemento com index %d nao existe na nossa base de dados!\n", index);
-        int opcao_1 = obter_input(0, 2, "1 - Registar elemento\n", "2 - Escolher outro elemento\n", "0 - Voltar atras\n", "\0", "\0", "\0");
-        switch(opcao_1){
-            case 1: menu_registar(s_principal, baseDados); break;
-            case 2: alterar_elemento(s_principal, receber_index(), baseDados);
-            case 0: menu_consultar(s_principal, baseDados); break;
-        }
-    }
-}
-void alterar_elemento(t_principal* s_principal, int index, int baseDados) { // 24 linhas
-    system("cls");
-    if(verificar_se_existe(s_principal, index, baseDados) == 1){
-        printf("\n\nPretende alterar este elemento?\n\n");
-        cabecalho_apresentar_dados(baseDados);
-        apresentar_dados(s_principal, index, baseDados);
-        int opcao = obter_input(0, 3, "\n\n1 - Sim", "\n2 - Nao", "\n3 - Escolher outro elemento", "\n0 - Voltar atras", "\0", "\0");
-        switch(opcao){
-            case 1:  // Sim
-                registar_informacao(s_principal, index, baseDados);
-                menu_consultar(s_principal, baseDados);
-                break;
-            case 2: menu_consultar(s_principal, baseDados); break;// Nao
-            case 3: apagar_elemento(s_principal, receber_index(), baseDados); break; // Escolher outro elemento
-            case 0: menu_principal(s_principal); break;// Voltar atras
-        }
-    } else{
-        printf("\nO elemento com index %d nao existe na nossa base de dados!\n", index);
-        int opcao_1 = obter_input(0, 2, "1 - Registar elemento\n", "2 - Escolher outro elemento\n", "0 - Voltar atras", "\0", "\0", "\0");
-        switch(opcao_1){
-            case 1: menu_registar(s_principal, baseDados); break;
-            case 2: alterar_elemento(s_principal, receber_index(), baseDados);
-            case 0: menu_consultar(s_principal, baseDados); break;
-        }
-    }
-
-}
-int verificar_se_existe(t_principal * s_principal, int index, int baseDados){ // 21 linhas
-    int i = 0, existe = 0;
-    switch(baseDados){
-        case ESCOLA:
-            do{
-                existe = s_principal->v_escola[index].id_escola != 0 ? 1 : 0;
-                i++;
-            } while(existe != 1 || i < MAX_ESCOLA);
-            break;
-        case UTILIZADOR:
-            do{
-                existe = s_principal->v_utilizador[index].id_utilizador != 0 ? 1 : 0;
-                index++;
-            } while(existe != 1 || i < MAX_UTILIZADOR);
-            break;
-        case TRANSACAO:
-            do{
-                existe = s_principal->v_transacao[index].id_transacao != 0 ? 1 : 0;
-                i++;
-            } while(existe != 1 || i < MAX_TRANSACAO);
-    }
-    return existe;
-}
-
-void menu_estatisticas(t_principal* s_principal, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]){ // 21 linhas
-    system("cls");
-    float total_faturado = 0;
-    int index = 0, opcao = 0;
-    char espacos[100];
-    printf("Visualizar Estatisticas\n\n");
-    if(dataInicial.dia != 0){printf("Data Inicial: %d/%d/%d\n", dataInicial.dia, dataInicial.mes, dataInicial.ano);} else {printf("Data Inicial: \n");}
-    if(dataFinal.dia != 0){printf("Data Final: %d/%d/%d\n", dataFinal.dia, dataFinal.mes, dataFinal.ano);} else {printf("Data Final: \n");}
-    printf("Tipo de utilizador: %s\n\n", tipoUtilizador);
-    printf(" #  | ID Escola | Nome Escola                                       | Total faturado |  N%c pagamentos  |  %% pagamentos |\n", 248);
-    printf("------------------------------------------------------------------------------------------------------------------------\n");
-    for(index = 0; index < MAX_ESCOLA; index++){
-        if(s_principal->v_escola[index].id_escola != 0){
-            escrever_elemento_tabela_estatisticas(s_principal, dataInicial, dataFinal, tipoUtilizador, index);
-        }
-    }
-    opcao = obter_input(0, 1, "\n\n\n1 - Filtros","\n0 - Voltar atras", "\0", "\0", "\0", "\0");
-    switch(opcao){
-        case 1: escrever_filtos(s_principal); break;
-        case 0: menu_principal(s_principal); break;
-        default: menu_principal(s_principal);
-    }
-}
-void escrever_elemento_tabela_estatisticas(t_principal * s_principal, t_data dataInicial, t_data dataFinal, char tipoUtilizador[], int index){ // 17 linhas
-    float total_faturado = 0;
-    char espacos[100];
-    int total_transacoes_percentagem = 0, total_transacoes = 0;
-    total_faturado = calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 2, dataInicial, dataFinal, tipoUtilizador);
-    total_transacoes_percentagem = (int)calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 0, dataInicial, dataFinal, tipoUtilizador);
-    total_transacoes = (int)calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 1, dataInicial, dataFinal, tipoUtilizador);
-    calcula_numero_de_espacos(espacos, 5, conta_caracteres_numero(index));
-    printf(" %d%s", index, espacos);
-    calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(s_principal->v_escola[index].id_escola));
-    printf("%d%s", s_principal->v_escola[index].id_escola, espacos);
-    calcula_numero_de_espacos(espacos, 52, strlen(s_principal->v_escola[index].nome_escola));
-    printf("%s%s", s_principal->v_escola[index].nome_escola, espacos);
-    calcula_numero_de_espacos(espacos, 18, conta_caracteres_numero(total_faturado) + 3);
-    printf("%.2f%s", total_faturado, espacos);
-    calcula_numero_de_espacos(espacos, 19, conta_caracteres_numero(total_transacoes));
-    printf("%d%s", total_transacoes, espacos);
-    printf("%d%%\n", total_transacoes_percentagem);
-}
-void escrever_filtos(t_principal *s_principal){ // 9 linhas
-    t_data dataInicial, dataFinal;
-    char tipoUtilizador[20];
-    printf("Data Inicial (FORMATO dd/mm/yyyy): ");
-    obter_data(&dataInicial.dia, &dataInicial.mes, &dataInicial.ano);
-    printf("Data Final (FORMATO dd/mm/yyyy): ");
-    obter_data(&dataFinal.dia, &dataFinal.mes, &dataFinal.ano);
-    printf("Tipo de Utilizador: ");
-    scanf("%s", tipoUtilizador);
-    menu_estatisticas(s_principal, dataInicial, dataFinal, tipoUtilizador);
-}
 void obter_data(int * dia, int * mes, int * ano){ // 25 linhas
     int max_dia = 0, sucesso = INSUCESSO; char stringData[15]; t_data auxiliar;
     do{
-        scanf("%s", stringData);
-        if(stringData[2] == '/' && stringData[5] == '/'){
-            if((stringData[0] >= '0' && stringData[0] <= '9') && (stringData[1] >= '0' && stringData[1] <= '9')){
-                if((stringData[3] >= '0' && stringData[3] <= '9') && (stringData[4] >= '0' && stringData[4] <= '9')){
-                    if((stringData[6] >= '0' && stringData[6] <= '9') && (stringData[7] >= '0' && stringData[7] <= '9') && (stringData[8] >= '0' && stringData[8] <= '9') && stringData[9] >= '0' && stringData[9] <= '9'){
-                        auxiliar.dia = ((stringData[0] - '0') * 10) + (stringData[1] - '0');
-                        auxiliar.mes = ((stringData[3] - '0') * 10) + (stringData[4] - '0');
-                        auxiliar.ano = (stringData[6] - '0') * 1000 + (stringData[7] - '0') * 100 + (stringData[8] -'0') * 10 + (stringData[9] - '0');
-                        if(auxiliar.ano >= 1900 && auxiliar.ano <= 2022){
-                            if(auxiliar.mes >= 1 && auxiliar.mes <= 12){ max_dia = verifica_mes(auxiliar.mes);
-                                if(auxiliar.dia >= 1 && auxiliar.dia <= max_dia){
-                                    *dia = auxiliar.dia;
+        scanf("%s", stringData);                             // obtem uma string
+        if(stringData[2] == '/' && stringData[5] == '/'){    // verifica sem tem barras com o seguinte format xx/xx/xxxx
+            if((stringData[0] >= '0' && stringData[0] <= '9') && (stringData[1] >= '0' && stringData[1] <= '9')){  // verifica se os primeiros dois caracteres (dias) sao numeros
+                if((stringData[3] >= '0' && stringData[3] <= '9') && (stringData[4] >= '0' && stringData[4] <= '9')){ // verifica se os caracteres 4 e 5 (meses) sao numero 
+                    if((stringData[6] >= '0' && stringData[6] <= '9') && (stringData[7] >= '0' && stringData[7] <= '9') && (stringData[8] >= '0' && stringData[8] <= '9') && stringData[9] >= '0' && stringData[9] <= '9'){ // verifica se os caracteres 7,8,9 e 10 (ano) sao numero
+                        auxiliar.dia = ((stringData[0] - '0') * 10) + (stringData[1] - '0');        // converte char para int
+                        auxiliar.mes = ((stringData[3] - '0') * 10) + (stringData[4] - '0');        // converte char para int
+                        auxiliar.ano = (stringData[6] - '0') * 1000 + (stringData[7] - '0') * 100 + (stringData[8] -'0') * 10 + (stringData[9] - '0'); // converte char para int
+                        if(auxiliar.ano >= 1900 && auxiliar.ano <= 2022){  // valida o ano inserido
+                            if(auxiliar.mes >= 1 && auxiliar.mes <= 12){ max_dia = verifica_mes(auxiliar.mes); // valida o mes inserido e determina o maximo de dias desse mes
+                                if(auxiliar.dia >= 1 && auxiliar.dia <= max_dia){ // valida o dia inserido
+                                    *dia = auxiliar.dia;               // caso sejam todos validos insere no endereço da variavel de parametro
                                     *mes = auxiliar.mes;
                                     *ano = auxiliar.ano;
                                     sucesso = SUCESSO;
@@ -697,20 +742,20 @@ void obter_hora(int * hora, int * minuto, int * segundo){ // 25 linhas
     int sucesso = INSUCESSO; char stringData[15]; t_hora auxiliar;
     do{
         scanf("%s", stringData);
-        if(stringData[2] == ':' && stringData[5] == ':'){
-            if((stringData[0] >= '0' && stringData[0] <= '9') && (stringData[1] >= '0' && stringData[1] <= '9')){
+        if(stringData[2] == ':' && stringData[5] == ':'){  // verifica se está no formato correto xx:xx:xx
+            if((stringData[0] >= '0' && stringData[0] <= '9') && (stringData[1] >= '0' && stringData[1] <= '9')){   // verifica se sao numeros
                 if((stringData[3] >= '0' && stringData[3] <= '9') && (stringData[4] >= '0' && stringData[4] <= '9')){
                     if((stringData[6] >= '0' && stringData[6] <= '9') && (stringData[7] >= '0' && stringData[7] <= '9')){
-                        auxiliar.hora = ((stringData[0] - '0') * 10) + (stringData[1] - '0');
-                        auxiliar.minuto = ((stringData[3] - '0') * 10) + (stringData[4] - '0');
-                        auxiliar.segundo = (stringData[6] - '0') * 10 + (stringData[7] - '0');
-                        if(auxiliar.segundo >= 0 && auxiliar.segundo <= 59){
-                            if(auxiliar.minuto >= 0 && auxiliar.minuto <= 59){
-                                if(auxiliar.hora >= 0 && auxiliar.hora <= 23){
-                                    *hora = auxiliar.hora;
+                        auxiliar.hora = ((stringData[0] - '0') * 10) + (stringData[1] - '0');   // conversao char para int
+                        auxiliar.minuto = ((stringData[3] - '0') * 10) + (stringData[4] - '0'); // conversao char para int
+                        auxiliar.segundo = (stringData[6] - '0') * 10 + (stringData[7] - '0');  // conversao char para int
+                        if(auxiliar.segundo >= 0 && auxiliar.segundo <= 59){                    // valida os segundos   
+                            if(auxiliar.minuto >= 0 && auxiliar.minuto <= 59){                  // valida os minutos
+                                if(auxiliar.hora >= 0 && auxiliar.hora <= 23){                  // valida as horas
+                                    *hora = auxiliar.hora;         // caso sejam todos validos, insere no endereço da variavel inserida como parametro
                                     *minuto = auxiliar.minuto;
                                     *segundo = auxiliar.segundo;
-                                    sucesso = SUCESSO;
+                                    sucesso = SUCESSO; // acaba o ciclo
                                 } else { printf("\nHora invalida! Tem de ser entre 00 e 23!\n\nHora (FORMATO hh:mm:ss): ");}
                             } else { printf("\nMinutos invalidos! Tem de ser entre 0 e 59!\n\nHora (FORMATO hh:mm:ss): ");}
                         } else { printf("\nSegundos invalidos! Tem de ser entre 0 e 59!\n\nHora (FORMATO hh:mm:ss): ");}
@@ -722,6 +767,7 @@ void obter_hora(int * hora, int * minuto, int * segundo){ // 25 linhas
 }
 void obter_int(int * numero, int minimo, int maximo){ // 8 linhas
     int auxiliar = 0;
+    // recebe um valor e valida dependendo do minimo e maximo introduzido por paramentro
     do{
         scanf("%d", &auxiliar);
         if(auxiliar >= maximo || auxiliar < minimo){
@@ -732,8 +778,8 @@ void obter_int(int * numero, int minimo, int maximo){ // 8 linhas
 }
 void obter_identificador(t_principal * s_principal, int * identificador, int baseDados, int existe){ // 25 linhas  existe = 0 (que nao existe)   |  existe = 1 (existe)
     int auxiliar = 0, index = 0, sucesso = INSUCESSO;
+    // obtem um int e valida de acordo com o parametro "existe", caso o parametro seja 0 é porque nao se quer identificadores repetidos, caso seja 1 é porque necessita que exista na base de dados
     do{
-
         scanf("%d", &auxiliar);
         switch(baseDados){
             case ESCOLA:
@@ -760,6 +806,7 @@ void obter_identificador(t_principal * s_principal, int * identificador, int bas
 }
 void obter_string(char string[], char string_a_comparar_1[], char string_a_comparar_2[], char string_a_comparar_3[], int maxDiff, int palavraDiferente){ // 24 linhas
     char auxiliar[80]; int index = 0, caracteres_diferentes = 0, palavra_encontrada = INSUCESSO;
+    // obtem uma string e compara com as strings inseridas nos parametros, caso tenha menos do que a maxDiff de caracteres, valida o input
     do{
         fflush(stdin);
         scanf("%[^\n]s", auxiliar);
@@ -787,6 +834,7 @@ void obter_string(char string[], char string_a_comparar_1[], char string_a_compa
 void obter_email(char email[]){ // 15 linhas
     char auxiliar[100];
     int index = 0, sucesso = INSUCESSO;
+    // obtem uma string e valida a ver se tem um @
     do{
         fflush(stdin);
         scanf("%s", auxiliar);
@@ -801,41 +849,94 @@ void obter_email(char email[]){ // 15 linhas
     } while(sucesso != SUCESSO);
     strcpy(email, auxiliar);
 }
-int diferenca_caracteres(char string1[], char string2[]){ // 10 linhas
-    int numero_char_diferente = 0, tamanho, index = 0;
-    for(int i = 0; i < 10; i++){
-        if(string1[i] != '\0'){tamanho++;}
-    }
-    for(index = 0; index < tamanho; index++){
-        if(string1[index] != string2[index]){
-            numero_char_diferente++;
-        }
-    }
-    return numero_char_diferente;
+void escrever_filtos(t_principal *s_principal){ // 9 linhas
+    // obtem os filtros para o menu de estatisticas
+    t_data dataInicial, dataFinal;
+    char tipoUtilizador[20];
+    printf("Data Inicial (FORMATO dd/mm/yyyy): ");
+    obter_data(&dataInicial.dia, &dataInicial.mes, &dataInicial.ano);
+    printf("Data Final (FORMATO dd/mm/yyyy): ");
+    obter_data(&dataFinal.dia, &dataFinal.mes, &dataFinal.ano);
+    printf("Tipo de Utilizador: ");
+    obter_string(tipoUtilizador, "Docente", "Estudante", "Funcionario", 3, 1);
+    menu_estatisticas(s_principal, dataInicial, dataFinal, tipoUtilizador);
 }
-int verifica_mes(int mes){ // 22 linhas
-    int max_dia;
-    switch(mes){
-        case JANEIRO:
-        case MARCO:
-        case MAIO:
-        case JULHO:
-        case AGOSTO:
-        case OUTUBRO:
-        case DEZEMBRO:
-            max_dia = 31;
-            break;
-        case ABRIL:
-        case JUNHO:
-        case SETEMBRO:
-        case NOVEMBRO:
-            max_dia = 30;
-            break;
-        case FEVEREIRO:
-            max_dia = 28;
-            break;
+//***************
+//*   FIMINPUT  *
+//***************
+
+
+//***************************
+//*   CALCULOS E PESQUISA   *
+//***************************
+int procurar_elemento_vazio(t_principal* s_principal, int baseDados) { // 22 linhas
+    int index = 0;
+    // procura um elemento vazio na base de dados introduzida por parametro
+    switch (baseDados) {
+        case ESCOLA:
+            for (index = 0; index < MAX_ESCOLA; index++) {
+                if (s_principal->v_escola[index].id_escola == 0) {
+                    return index;
+                }
+            }break;
+        case UTILIZADOR:
+            for (index = 0; index < MAX_UTILIZADOR; index++) {
+                if (s_principal->v_utilizador[index].id_utilizador == 0) {
+                    return index;
+                }
+            }break;
+        case TRANSACAO:
+            for (int index = 0; index < MAX_TRANSACAO; index++) {
+                if (s_principal->v_transacao[index].id_transacao == 0) {
+                    return index;
+                }
+            }break;
     }
-    return max_dia;
+    return BASE_DADOS_CHEIA;
+}
+int conta_caracteres_numero(int numero){ // 6 linhas
+    // conta quantos caracteres um int tem        EX: 12345 = 5
+    int count = 1;
+    while (numero > 9) {
+        numero = numero / 10;
+        count++;
+    }
+    return count;
+}
+void calcula_numero_de_espacos(char espacos[], int numero_espacos_normalmente, int tamanho_palavra){  // 8 linhas
+    // calcula o numero de espaços dependendo do tamanho da palavra e dos espaços que normalmente teria se a palavra estivesse vazio
+    int index = 0;
+    char auxiliar[100];
+    for(index = 0; index < 100; index++){
+        espacos[index] = '\0';
+    }
+    for(index = 0; index < numero_espacos_normalmente - tamanho_palavra; index++){
+        espacos[index] = ' ';
+    }
+}
+int verificar_se_existe(t_principal * s_principal, int index, int baseDados){ // 21 linhas
+    int i = 0, existe = 0;
+    switch(baseDados){
+        // verifica se o elemento existe na base de dados inserida no parametro
+        case ESCOLA:
+            do{
+                existe = s_principal->v_escola[index].id_escola != 0 ? 1 : 0;
+                i++;
+            } while(existe != 1 || i < MAX_ESCOLA);
+            break;
+        case UTILIZADOR:
+            do{
+                existe = s_principal->v_utilizador[index].id_utilizador != 0 ? 1 : 0;
+                index++;
+            } while(existe != 1 || i < MAX_UTILIZADOR);
+            break;
+        case TRANSACAO:
+            do{
+                existe = s_principal->v_transacao[index].id_transacao != 0 ? 1 : 0;
+                i++;
+            } while(existe != 1 || i < MAX_TRANSACAO);
+    }
+    return existe;
 }
 float calcula_percentagem_faturado_por_escola(t_principal * s_principal, int id_escola, int objetivo, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]){
     int percentagem_total_faturado = 0, total_transacoes = 0, transacoes_escola = 0;
@@ -926,22 +1027,46 @@ int verifica_tipo_utilizador(t_principal * s_principal, int id_utilizador, char 
     }
     return sucesso;
 }
-void menu_sair(t_principal* s_principal) { // 16 linhas
-    int opcao = 0;
-    system("cls");
-    opcao = obter_input(0, 2, "Sair da aplicacao\n\n", "Deseja guardar a informacao registada?\n", "1 - Guardar\n", "2 - Nao guardar\n", "0 - Voltar atras", "\0");
-    switch(opcao){
-        case 1:
-            gravar_no_ficheiro(s_principal);
-            system("cls");
-            printf("Sair da Aplicacao\n\n");
-            printf("Informacao guardada com sucesso!\n");
-            printf("\n\nPrima qualquer tecla para sair da aplicacao");
-            getchar();
-            exit(1);
+int verifica_mes(int mes){ // 22 linhas
+    int max_dia;
+    switch(mes){
+        case JANEIRO:
+        case MARCO:
+        case MAIO:
+        case JULHO:
+        case AGOSTO:
+        case OUTUBRO:
+        case DEZEMBRO:
+            max_dia = 31;
             break;
-        case 2: exit(1); break;
-        case 0: menu_principal(s_principal);
-        default: menu_sair(s_principal);
+        case ABRIL:
+        case JUNHO:
+        case SETEMBRO:
+        case NOVEMBRO:
+            max_dia = 30;
+            break;
+        case FEVEREIRO:
+            max_dia = 28;
+            break;
     }
+    return max_dia;
 }
+int diferenca_caracteres(char string1[], char string2[]){ // 10 linhas
+    int numero_char_diferente = 0, tamanho, index = 0;
+    for(int i = 0; i < 10; i++){
+        if(string1[i] != '\0'){tamanho++;} // obtem o tamanho da string
+    }
+    for(index = 0; index < tamanho; index++){   // vai por um ciclo que adiciona se o caracter da string1 for diferente do string2
+        if(string1[index] != string2[index]){
+            numero_char_diferente++;
+        }
+    }
+    return numero_char_diferente;
+}
+//******************************
+//*  FIM CALCULOS E PESQUISA   *
+//******************************
+
+
+
+
