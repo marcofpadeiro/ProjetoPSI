@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1644101973 source:d:\schoolshit\projeto_psi_pl2-7_marcopadeiro_tomasmoura\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+

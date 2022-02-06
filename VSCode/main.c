@@ -1,12 +1,12 @@
 /* 
-    Autores: Marco Padeiro (2211868) & Tomas Moura (2211866)          | GRUPO 7-PL2 |
+    Autores: Marco Padeiro (2211868), Tomas Moura (2211866)          | GRUPO 7-PL2 |
     Escola: Escola Superior de Tecnologia e Gestão (ESTG)
     Curso: TESP de Programação de Sistemas de Informação (Diurno) - Ano 1
     Unidade Curricular: Fundamentos de Programação (FP)
+    Ano Letivo: 2021/2022
     Docente(s): 
         José Vítor Martins Ramos
         Roberto Aguiar Ribeiro
-    Ano Letivo: 2021/2022
 
     Objetivos da Aplicação: 
         Efetuar a gestão das operações de  carregamento e pagamento (transações)
@@ -110,10 +110,10 @@ void limite_base_dados(t_principal* s_principal, int baseDados);
 // Funções responsaveis por manipular a base de dados armazenada na memoria
 void limpa_array(t_principal* s_principal, int baseDados);
 void limpa_elemento(t_principal* s_principal, int index, int baseDados);
-void registar_informacao(t_principal* s_principal, int index, int baseDados);
-void registar_escola(t_principal* s_principal, int index);
-void registar_utilizador(t_principal* s_principal, int index);
-void registar_transacao(t_principal* s_principal, int index);
+int registar_informacao(t_principal* s_principal, int index, int baseDados);
+int registar_escola(t_principal* s_principal, int index);
+int registar_utilizador(t_principal* s_principal, int index);
+int registar_transacao(t_principal* s_principal, int index);
 void consultar_informacao(t_principal* s_principal, int baseDados);
 void alterar_elemento(t_principal* s_principal, int index, int baseDados);
 void apagar_elemento(t_principal* s_principal, int index, int baseDados);
@@ -135,13 +135,15 @@ int procurar_elemento_vazio(t_principal* s_principal, int baseDados);           
 int conta_caracteres_numero(int numero);                                             // devolve quantos caracteres um numero tem
 void calcula_numero_de_espacos(char espacos[], int numero_espacos_normalmente, int tamanho_palavra); // calcula o numero de espaços entre uma palavra e outra (utilizado na tabela)
 int verificar_se_existe(t_principal * s_principal, int index, int baseDados);        // verifica se o elemento ja existe na base de dados
-float calcula_percentagem_faturado_por_escola(t_principal * s_principal, int id_escola, int objetivo, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]);
+float calcula_total_faturado_por_escola(t_principal * s_principal, int id_escola, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]);
+int calcula_percentagem_transacoes(t_principal * s_principal, int id_escola, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]);
+int calcula_total_transacoes_escola(t_principal * s_principal, int id_escola, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]);
 int verifica_se_utilizador_pertence_escola(t_principal * s_principal, int id_utilizador, int id_escola); // verifica se um utilizador pertence a certa escola
 int verifica_mes(int mes);  // Função responsavel por devolver o maximo de dias de cada mes (EX: Fevereiro: 28 dias)
 int verifica_tipo_utilizador(t_principal * s_principal, int id_utilizador, char tipoUtilizador[]); // verifica se 
 int verifica_se_data_esta_dentro(t_data dataInserida,t_data dataComparar); // verifica se a data está entre os parametros introduzidos
 int diferenca_caracteres(char string1[], char string2[]); // devole quantos caracteres são diferentes entre a string1 e string2
-
+int validar_valor(t_principal * s_principal, t_transacao v_transacao);
 
 void main() { // 4 linhas
     t_principal s_principal;                     // cria uma variavel responsavel por armazenar a base de dados na memoria
@@ -182,14 +184,15 @@ void gravar_no_ficheiro(t_principal* s_principal) {  // 5 linhas
 //****************
 void menu_principal(t_principal* s_principal) { // 25 linhas
     system("cls");
-    int opcao = 0, index; float total_faturado; char espacos[100]; t_data dataInicial = {0, 0, 0}, dataFinal = {0, 0, 0};
+    int opcao = 0, index; float total_faturado = 0; char espacos[100]; t_data dataInicial = {0, 0, 0}, dataFinal = {0, 0, 0};
 
     // escreve as estatisticas de cada escola
     printf(" #  | ID Escola | Nome Escola                                       | Total faturado |\n");
     printf("--------------------------------------------------------------------------------------\n");
     for(index = 0; index < MAX_ESCOLA; index++){                     
         if(s_principal->v_escola[index].id_escola != 0){
-            total_faturado = calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 2, dataInicial, dataFinal, "\0");
+            total_faturado = 0;
+            total_faturado = calcula_total_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, dataInicial, dataFinal, "\0");
             calcula_numero_de_espacos(espacos, 5, conta_caracteres_numero(index));
             printf(" %d%s", index, espacos);
             calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(s_principal->v_escola[index].id_escola));
@@ -213,7 +216,7 @@ void menu_principal(t_principal* s_principal) { // 25 linhas
 }
 void menu_registar(t_principal* s_principal, int baseDados) {     // 22 linhas
     system("cls");
-    int opcao = 0, index = procurar_elemento_vazio(s_principal, baseDados);
+    int opcao = 0, index = procurar_elemento_vazio(s_principal, baseDados), sucesso = INSUCESSO;
 
     // para definir o titulo da base de dados que está a inserir
     char titulo[13];
@@ -227,18 +230,20 @@ void menu_registar(t_principal* s_principal, int baseDados) {     // 22 linhas
     printf("Menu Registar - %s\n", titulo);
     printf("-----------------------------------------\n");
     if(baseDados == ESCOLA || baseDados == UTILIZADOR || baseDados == TRANSACAO){// caso a base de dados inserida no parametro seja valida
-        registar_informacao(s_principal, index, baseDados);    // pede input para registar a informação na base de dados enviada por parametro
+        sucesso = registar_informacao(s_principal, index, baseDados);    // pede input para registar a informação na base de dados enviada por parametro
         printf("\n");
         // mostra a informação inserida pelo utilizador e pede a confirmação se quer inserir mais elementos
-        cabecalho_apresentar_dados(baseDados);
-        apresentar_dados(s_principal, index, baseDados);
-        opcao = obter_input(1, 3, "\nDeseja introduzir mais elementos?", "\n1 - Sim", "\n2 - Nao", "\n3 - Mudar base de dados", "\0", "\0");
+        if(sucesso == SUCESSO){
+            cabecalho_apresentar_dados(baseDados);
+            apresentar_dados(s_principal, index, baseDados);
+            opcao = obter_input(1, 3, "\nDeseja introduzir mais elementos?", "\n1 - Sim", "\n2 - Nao", "\n3 - Mudar base de dados", "\0", "\0");
+        } else {opcao = obter_input(1, 3, "\nDeseja tentar outra vez?", "\n1 - Sim", "\n2 - Nao", "\n3 - Mudar base de dados", "\0", "\0");}
         switch (opcao){
             case 1: menu_registar(s_principal, baseDados); break;
             case 2: menu_principal(s_principal); break;
             case 3: menu_registar(s_principal, selecinar_base_dados()); break;
         }
-    } else { menu_principal(s_principal); }
+    }   
 }
 void menu_consultar(t_principal* s_principal, int baseDados) { // 21 linhas
     system("cls");
@@ -328,7 +333,7 @@ void apresentar_transacoes(t_principal* s_principal, int index, int baseDados){ 
     printf("%s%s", v_aux_transacao.tipo_transacao, espacos);
     calcula_numero_de_espacos(espacos, 21, conta_caracteres_numero(v_aux_transacao.valor) + 3);
     printf("%.2f%s", v_aux_transacao.valor, espacos);
-    calcula_numero_de_espacos(espacos, 15, conta_caracteres_numero(v_aux_transacao.data.dia) + conta_caracteres_numero(v_aux_transacao.data.mes) + conta_caracteres_numero(v_aux_transacao.data.ano) + 2);
+    calcula_numero_de_espacos(espacos, 16, 10);
     printf("%02d/%02d/%04d%s", v_aux_transacao.data.dia, v_aux_transacao.data.mes, v_aux_transacao.data.ano, espacos);
     printf("%02d:%02d:%02d\n", v_aux_transacao.hora.hora, v_aux_transacao.hora.minuto, v_aux_transacao.hora.segundo);  
 }
@@ -384,9 +389,9 @@ void escrever_elemento_tabela_estatisticas(t_principal * s_principal, t_data dat
     float total_faturado = 0;
     char espacos[100];
     int total_transacoes_percentagem = 0, total_transacoes = 0;
-    total_faturado = calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 2, dataInicial, dataFinal, tipoUtilizador);
-    total_transacoes_percentagem = (int)calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 0, dataInicial, dataFinal, tipoUtilizador);
-    total_transacoes = (int)calcula_percentagem_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, 1, dataInicial, dataFinal, tipoUtilizador);
+    total_faturado = calcula_total_faturado_por_escola(s_principal, s_principal->v_escola[index].id_escola, dataInicial, dataFinal, tipoUtilizador);
+    total_transacoes_percentagem = calcula_percentagem_transacoes(s_principal, s_principal->v_escola[index].id_escola, dataInicial, dataFinal, tipoUtilizador);
+    total_transacoes = calcula_total_transacoes_escola(s_principal, s_principal->v_escola[index].id_escola, dataInicial, dataFinal, tipoUtilizador);
     calcula_numero_de_espacos(espacos, 5, conta_caracteres_numero(index));
     printf(" %d%s", index, espacos);
     calcula_numero_de_espacos(espacos, 12, conta_caracteres_numero(s_principal->v_escola[index].id_escola));
@@ -493,18 +498,20 @@ void limpa_elemento(t_principal* s_principal, int index, int baseDados) { // 25 
             s_principal->v_transacao[index].hora = (t_hora){ 0, 0, 0 };
     }
 }
-void registar_informacao(t_principal* s_principal, int index, int baseDados) { // 9 linhas
+int registar_informacao(t_principal* s_principal, int index, int baseDados) { // 9 linhas
+    int sucesso = INSUCESSO;
     if(index != BASE_DADOS_CHEIA){ // caso a base de dados nao esteja cheia
         switch (baseDados) {
-            case ESCOLA: registar_escola(s_principal, index); break;            // insere escolas
-            case UTILIZADOR: registar_utilizador(s_principal, index); break;    // insere utilizadores
-            case TRANSACAO: registar_transacao(s_principal, index); break;      // insere transacoes
+            case ESCOLA: sucesso = registar_escola(s_principal, index); break;            // insere escolas
+            case UTILIZADOR: sucesso = registar_utilizador(s_principal, index); break;    // insere utilizadores
+            case TRANSACAO: sucesso = registar_transacao(s_principal, index); break;      // insere transacoes
         }
     } else { // caso a base de dados esteja cheia
         limite_base_dados(s_principal, baseDados);  // chama o menu que diz que a base de dados está cheia
     }
+    return sucesso;
 }
-void registar_escola(t_principal* s_principal, int index) { // 19 linhas
+int registar_escola(t_principal* s_principal, int index) { // 19 linhas
     // obtem o input do utilizador, valida-o e caso esteja tudo valido, insere na base de dados na memoria
     t_escola v_aux_escola[MAX_ESCOLA];
     printf("Identificador Escola: ");
@@ -525,8 +532,9 @@ void registar_escola(t_principal* s_principal, int index) { // 19 linhas
     strcpy(s_principal->v_escola[index].abreviatura, v_aux_escola[index].abreviatura);
     strcpy(s_principal->v_escola[index].campus, v_aux_escola[index].campus);
     strcpy(s_principal->v_escola[index].localizacao, v_aux_escola[index].localizacao);
+    return SUCESSO;
 }
-void registar_utilizador(t_principal* s_principal, int index) { // 25 linhas
+int registar_utilizador(t_principal* s_principal, int index) { // 25 linhas
     // obtem o input do utilizador, valida-o e caso esteja tudo valido, insere na base de dados na memoria
     t_utilizador v_aux_utilizador[MAX_UTILIZADOR];
     fflush(stdin);
@@ -552,11 +560,11 @@ void registar_utilizador(t_principal* s_principal, int index) { // 25 linhas
     s_principal->v_utilizador[index].NIF = v_aux_utilizador[index].NIF;
     strcpy(s_principal->v_utilizador[index].tipo_utilizador, v_aux_utilizador[index].tipo_utilizador);
     strcpy(s_principal->v_utilizador[index].email, v_aux_utilizador[index].email);
-    s_principal->v_utilizador[index].saldo = v_aux_utilizador[index].saldo;
+    s_principal->v_utilizador[index].saldo = v_aux_utilizador[index].saldo; return SUCESSO;
 }
-void registar_transacao(t_principal* s_principal, int index) { // 21 linhas
+int registar_transacao(t_principal* s_principal, int index) { // 25 linhas
     // obtem o input do utilizador, valida-o e caso esteja tudo valido, insere na base de dados na memoria
-    int validacao_transacoes[6];
+    int sucesso = SUCESSO;
     t_transacao v_aux_transacao[MAX_TRANSACAO];
     fflush(stdin);
     printf("Identificador Transacao: ");
@@ -571,12 +579,16 @@ void registar_transacao(t_principal* s_principal, int index) { // 21 linhas
     obter_data(&v_aux_transacao[index].data.dia, &v_aux_transacao[index].data.mes, &v_aux_transacao[index].data.ano);
     printf("Hora (FORMATO hh:mm:ss): ");
     obter_hora(&v_aux_transacao[index].hora.hora, &v_aux_transacao[index].hora.minuto, &v_aux_transacao[index].hora.segundo);
-    s_principal->v_transacao[index].id_transacao = v_aux_transacao[index].id_transacao;
-    s_principal->v_transacao[index].id_utilizador = v_aux_transacao[index].id_utilizador;
-    strcpy(s_principal->v_transacao[index].tipo_transacao, v_aux_transacao[index].tipo_transacao);
-    s_principal->v_transacao[index].valor = v_aux_transacao[index].valor;
-    s_principal->v_transacao[index].data = (t_data){ v_aux_transacao[index].data.dia, v_aux_transacao[index].data.mes, v_aux_transacao[index].data.ano };
-    s_principal->v_transacao[index].hora = (t_hora){ v_aux_transacao[index].hora.hora, v_aux_transacao[index].hora.minuto, v_aux_transacao[index].hora.segundo };
+    sucesso = validar_valor(s_principal, v_aux_transacao[index]);
+    if(sucesso == SUCESSO){
+        s_principal->v_transacao[index].id_transacao = v_aux_transacao[index].id_transacao;
+        s_principal->v_transacao[index].id_utilizador = v_aux_transacao[index].id_utilizador;
+        strcpy(s_principal->v_transacao[index].tipo_transacao, v_aux_transacao[index].tipo_transacao);
+        s_principal->v_transacao[index].valor = v_aux_transacao[index].valor;
+        s_principal->v_transacao[index].data = (t_data){ v_aux_transacao[index].data.dia, v_aux_transacao[index].data.mes, v_aux_transacao[index].data.ano };
+        s_principal->v_transacao[index].hora = (t_hora){ v_aux_transacao[index].hora.hora, v_aux_transacao[index].hora.minuto, v_aux_transacao[index].hora.segundo };
+    }
+    return sucesso;
 }
 void consultar_informacao(t_principal* s_principal, int baseDados) { // 24 linhas
     int index = 0;
@@ -616,12 +628,9 @@ void apagar_elemento(t_principal* s_principal, int index, int baseDados){ // 25 
         switch(opcao){
             case 1:  // Sim
                 limpa_elemento(s_principal, index, baseDados);
-                menu_consultar(s_principal, baseDados);
-                break;
-            case 2: menu_consultar(s_principal, baseDados); // Nao
-                break;
+                menu_consultar(s_principal, baseDados);break;
+            case 2: menu_consultar(s_principal, baseDados); break; //Nao
             case 3: apagar_elemento(s_principal, receber_index(), baseDados); break; // Escolher outro elemento
-                break;
             case 0: menu_principal(s_principal); break;// Voltar atras
         }
     } else{             // caso o elemento nao exista
@@ -794,7 +803,7 @@ void obter_identificador(t_principal * s_principal, int * identificador, int bas
                 } break;
             case TRANSACAO:
             for(index = 0; index < MAX_TRANSACAO; index++){
-                    if(existe == 0){if(auxiliar != s_principal->v_transacao[index].id_transacao){sucesso = INSUCESSO;}else{sucesso=INSUCESSO;break;}}
+                    if(existe == 0){if(auxiliar != s_principal->v_transacao[index].id_transacao){sucesso = SUCESSO;}else{sucesso=INSUCESSO;break;}}
                     else{if(auxiliar == s_principal->v_transacao[index].id_transacao){sucesso = SUCESSO;}}
                 } break;
         }
@@ -858,7 +867,7 @@ void escrever_filtos(t_principal *s_principal){ // 9 linhas
     printf("Data Final (FORMATO dd/mm/yyyy): ");
     obter_data(&dataFinal.dia, &dataFinal.mes, &dataFinal.ano);
     printf("Tipo de Utilizador: ");
-    obter_string(tipoUtilizador, "Docente", "Estudante", "Funcionario", 3, 1);
+    scanf("%s", tipoUtilizador);
     menu_estatisticas(s_principal, dataInicial, dataFinal, tipoUtilizador);
 }
 //***************
@@ -938,66 +947,98 @@ int verificar_se_existe(t_principal * s_principal, int index, int baseDados){ //
     }
     return existe;
 }
-float calcula_percentagem_faturado_por_escola(t_principal * s_principal, int id_escola, int objetivo, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]){
-    int percentagem_total_faturado = 0, total_transacoes = 0, transacoes_escola = 0;
-    int index;
-    float total_faturado;
+float calcula_total_faturado_por_escola(t_principal * s_principal, int id_escola, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]){ // 22 linhas
+    int index = 0;
+    float total_faturado = 0;
     for(index = 0; index < MAX_TRANSACAO; index++) { // vai por todas as transacoes
         if(s_principal->v_transacao[index].id_transacao != 0) { // se nao estiver vazio
             if(strcmp(s_principal->v_transacao[index].tipo_transacao, "Pagamento") == 0){
-               // if(dataInicial.dia == 0){
-                    total_transacoes++;
-                    if(verifica_se_utilizador_pertence_escola(s_principal, s_principal->v_transacao[index].id_utilizador, id_escola) == SUCESSO){
-                        transacoes_escola++;
-                        total_faturado += s_principal->v_transacao[index].valor;
-                    }
-                /*} else {
-                    if(verifica_se_data_esta_dentro(s_principal->v_transacao[index].data, dataInicial) == MAIOR){
-                        if(verifica_se_data_esta_dentro(s_principal->v_transacao[index].data, dataInicial) == MENOR){
-                            if(verifica_tipo_utilizador(s_principal, s_principal->v_transacao[index].id_utilizador, tipoUtilizador) == 0){
-                                total_transacoes++;
-                                if(verifica_se_utilizador_pertence_escola(s_principal, s_principal->v_transacao[index].id_utilizador, id_escola) == SUCESSO){
-                                    transacoes_escola++;
-                                    total_faturado += s_principal->v_transacao[index].valor;
+                if(verifica_se_utilizador_pertence_escola(s_principal, s_principal->v_transacao[index].id_utilizador, id_escola) == SUCESSO){
+                    if(dataInicial.dia != 0){
+                            if(verifica_se_data_esta_dentro(s_principal->v_transacao[index].data, dataInicial) == MAIOR){
+                                if(verifica_se_data_esta_dentro(s_principal->v_transacao[index].data, dataFinal) == MENOR){
+                                    for(int i = 0; i < MAX_UTILIZADOR; i++){
+                                        if(s_principal->v_utilizador[i].id_utilizador == s_principal->v_transacao[index].id_utilizador){
+                                            if(strcmp(s_principal->v_utilizador[index].tipo_utilizador, tipoUtilizador) == 0){ total_faturado += s_principal->v_transacao[index].valor; }
+                                        }
+                                    }
                                 }
                             }
-                        }
+                        } else { total_faturado += s_principal->v_transacao[index].valor; }
                     }
-                }*/
             }
         }
     }
-    percentagem_total_faturado = (transacoes_escola * 100) / total_transacoes;
-    if(objetivo == 0){
-        return (float)percentagem_total_faturado;
-    } else if (objetivo == 1){
-        return (float)transacoes_escola;
-    } else if (objetivo == 2){
-        return total_faturado;
-    }
-
+    return total_faturado;
 }
-int verifica_se_data_esta_dentro(t_data dataInserida,t_data dataComparar){ // 21 linhas
+int calcula_percentagem_transacoes(t_principal * s_principal, int id_escola, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]){  // 23 linhas
+    int percentagem_transacoes = 0, index = 0, total_transacoes = 0, transacoes_escola = 0;
+    for(index = 0; index < MAX_TRANSACAO; index++) { // vai por todas as transacoes
+        if(s_principal->v_transacao[index].id_transacao != 0) { // se nao estiver vazio
+            if(strcmp(s_principal->v_transacao[index].tipo_transacao, "Pagamento") == 0){
+                total_transacoes++;
+                if(verifica_se_utilizador_pertence_escola(s_principal, s_principal->v_transacao[index].id_utilizador, id_escola) == SUCESSO){
+                    if(dataInicial.dia != 0){
+                        if(verifica_se_data_esta_dentro(s_principal->v_transacao[index].data, dataInicial) == MAIOR){
+                            if(verifica_se_data_esta_dentro(s_principal->v_transacao[index].data, dataFinal) == MENOR){
+                                for(int i = 0; i < MAX_UTILIZADOR; i++){
+                                    if(s_principal->v_utilizador[i].id_utilizador == s_principal->v_transacao[index].id_utilizador){
+                                        if(strcmp(s_principal->v_utilizador[index].tipo_utilizador, tipoUtilizador) == 0){ transacoes_escola++; }
+                                    }
+                                }
+                            }
+                        }
+                    } else { transacoes_escola++; }
+                }  
+            }   
+        }
+    }
+    percentagem_transacoes = (transacoes_escola * 100) / total_transacoes;
+    return percentagem_transacoes;
+}
+int calcula_total_transacoes_escola(t_principal * s_principal, int id_escola, t_data dataInicial, t_data dataFinal, char tipoUtilizador[]){ // 22 linhas
+    int transacoes_escola = 0;
+    int index = 0;
+    for(index = 0; index < MAX_TRANSACAO; index++) { // vai por todas as transacoes
+        if(s_principal->v_transacao[index].id_transacao != 0) { // se nao estiver vazio
+            if(strcmp(s_principal->v_transacao[index].tipo_transacao, "Pagamento") == 0){
+                if(verifica_se_utilizador_pertence_escola(s_principal, s_principal->v_transacao[index].id_utilizador, id_escola) == SUCESSO){
+                    if(dataInicial.dia != 0){
+                        if(verifica_se_data_esta_dentro(s_principal->v_transacao[index].data, dataInicial) == MAIOR){
+                            if(verifica_se_data_esta_dentro(s_principal->v_transacao[index].data, dataFinal) == MENOR){
+                                for(int i = 0; i < MAX_UTILIZADOR; i++){
+                                    if(s_principal->v_utilizador[i].id_utilizador == s_principal->v_transacao[index].id_utilizador){
+                                        if(strcmp(s_principal->v_utilizador[index].tipo_utilizador, tipoUtilizador) == 0){ transacoes_escola++; }
+                                    }
+                                }
+                            }
+                        }
+                    } else { transacoes_escola++; }
+                } 
+            }
+        }
+    }
+    return transacoes_escola;
+}
+int verifica_se_data_esta_dentro(t_data dataInserida,t_data dataComparar){ // 17 linhas
     int verificador = IGUAL;
     if(dataInserida.ano < dataComparar.ano){
         verificador = MENOR;
     } else if(dataInserida.ano > dataComparar.ano){
         verificador = MAIOR;
-    } else {
-        if(dataInserida.mes < dataComparar.mes){
+        } else if(dataInserida.mes < dataComparar.mes){
             verificador = MENOR;
-        } else if (dataInserida.mes > dataComparar.mes) {
-            verificador = MAIOR;
-        } else {
-            if(dataInserida.dia < dataComparar.dia){
-                verificador = MENOR;
-            } else if(dataInserida.dia > dataComparar.dia){
+            } else if (dataInserida.mes > dataComparar.mes) {
                 verificador = MAIOR;
-            } else {
-                verificador = IGUAL;
-            }
-        }
-    }
+                } else if(dataInserida.dia < dataComparar.dia){
+                    verificador = MENOR;
+                    } else if(dataInserida.dia > dataComparar.dia){
+                        verificador = MAIOR;
+                        } else {
+                            verificador = IGUAL;
+                        }
+             
+    
     return verificador;
 }
 int verifica_se_utilizador_pertence_escola(t_principal * s_principal, int id_utilizador, int id_escola){ // 12 linhas
@@ -1062,6 +1103,24 @@ int diferenca_caracteres(char string1[], char string2[]){ // 10 linhas
         }
     }
     return numero_char_diferente;
+}
+int validar_valor(t_principal * s_principal, t_transacao v_transacao){ // 16 linhas
+    int sucesso = SUCESSO;
+    for(int i = 0; i < MAX_UTILIZADOR; i++){
+        if(s_principal->v_utilizador[i].id_utilizador == v_transacao.id_utilizador){
+            if(strcmp(v_transacao.tipo_transacao, "Pagamento") == 0){
+                if(s_principal->v_utilizador[i].saldo >= v_transacao.valor){
+                    s_principal->v_utilizador[i].saldo -= v_transacao.valor;
+                } else {
+                    printf("\n\nO utilizador nao tem saldo suficiente para a transacao!");
+                    sucesso = INSUCESSO;
+                }
+            } else if(strcmp(v_transacao.tipo_transacao, "Carregamento") == 0){
+                s_principal->v_utilizador[i].saldo += v_transacao.valor;
+            }
+        }
+    }
+    return sucesso;
 }
 //******************************
 //*  FIM CALCULOS E PESQUISA   *
